@@ -11,6 +11,9 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	uintptr_t symbolAddr;
 	switch (symbol)
 	{
+	case Symbol::SL_CONTEXT_INSTANCE:
+		symbolAddr = 0x180AD50C0;
+		break;
 	case Symbol::GS_CONTEXT_INSTANCE:
 		symbolAddr = 0x180AD3040;
 		break;

@@ -8,6 +8,7 @@ namespace Imports {
 
 enum class Symbol
 {
+	SL_CONTEXT_INSTANCE,
 	GS_CONTEXT_INSTANCE,
 };
 

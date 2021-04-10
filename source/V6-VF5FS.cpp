@@ -6,6 +6,7 @@
 
 #include "criware/CriStub.h"
 
+#include "Y6/sl.h"
 #include "Y6/gs.h"
 #include "Y6/Imports.h"
 #include "Y6/Patch.h"
@@ -15,14 +16,6 @@ static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Tempor
 // Contexts
 // TODO: Move elsewhere, as they will get very, very long
 // But not in V6-VF5FS.h as they are private!
-struct sl_context_t
-{
-	uint32_t tag_id = 0x6C73424C;
-	uint32_t version = 0x40601;
-	uint32_t size_of_struct = sizeof(decltype(*this)); // Should be 61440 when complete
-
-	// NOTE: This structure won't be used until size_of_struct is correct
-};
 
 // Seems unused, so don't bother getting it right
 struct ct_context_t
@@ -34,7 +27,6 @@ struct ct_context_t
 
 // TODO: Later these can be put by value, for now put them on the heap to make full use of page heap
 // and catch any out-of-bounds access
-sl_context_t* g_sl_context = new sl_context_t;
 ct_context_t* g_ct_context = new ct_context_t;
 
 // Configs
@@ -67,17 +59,20 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 
 	// Patch up structures and do post-DllMain work here
 	// Saves having to reimplement all the complex constructors and data types
-	gs::context_t* game_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
-	PatchGs(game_context_instance, window);
+	sl::context_t* sl_context_instance = static_cast<sl::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_CONTEXT_INSTANCE));
+	gs::context_t* gs_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
+	PatchSl(sl_context_instance);
+	PatchGs(gs_context_instance, window);
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;
 
-	const struct sl_module_t
+	struct sl_module_t
 	{
 		size_t size = sizeof(decltype(*this));
-		sl_context_t* context = g_sl_context;
+		sl::context_t* context;
 	} sl_module;
+	sl_module.context = sl_context_instance;
 	
 	struct gs_module_t
 	{
@@ -85,7 +80,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 		gs::context_t* context;
 		uint8_t pad[64];
 	} gs_module;
-	gs_module.context = game_context_instance;
+	gs_module.context = gs_context_instance;
 
 	const struct ct_module_t
 	{

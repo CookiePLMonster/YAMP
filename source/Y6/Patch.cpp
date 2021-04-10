@@ -1,5 +1,10 @@
 #include "Patch.h"
 
+void PatchSl(sl::context_t* context)
+{
+
+}
+
 void PatchGs(gs::context_t* context, const RenderWindow& window)
 {
 	// Fill the export context

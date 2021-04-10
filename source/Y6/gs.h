@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 // gs definitions for Yakuza 6
 namespace cdevice {
 
@@ -14,7 +16,7 @@ namespace gs {
 
 struct export_context_t
 {
-	size_t size_of_struct = sizeof(decltype(*this));
+	size_t size_of_struct;
 	void* p_context;
 	cdevice::shared_symbol_st sbgl_context;
 };
