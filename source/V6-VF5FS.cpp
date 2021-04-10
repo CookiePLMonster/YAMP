@@ -61,6 +61,8 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Saves having to reimplement all the complex constructors and data types
 	sl::context_t* sl_context_instance = static_cast<sl::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_CONTEXT_INSTANCE));
 	gs::context_t* gs_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
+	sl::handle_create_internal = static_cast<decltype(sl::handle_create_internal)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_HANDLE_CREATE));
+
 	PatchSl(sl_context_instance);
 	PatchGs(gs_context_instance, window);
 

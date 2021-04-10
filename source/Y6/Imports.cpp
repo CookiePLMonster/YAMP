@@ -17,6 +17,9 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::GS_CONTEXT_INSTANCE:
 		symbolAddr = 0x180AD3040;
 		break;
+	case Symbol::SL_HANDLE_CREATE:
+		symbolAddr = 0x1800214B0;
+		break;
 	default: // Unreachable
 		symbolAddr = 0;
 		break;
