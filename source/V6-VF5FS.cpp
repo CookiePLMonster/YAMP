@@ -2,8 +2,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
-
 #include "wil/resource.h"
+
+#include "criware/CriStub.h"
 
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
@@ -65,8 +66,13 @@ void Y6::VF5FS::Run()
 	THROW_LAST_ERROR_IF_NULL(gameDll);
 
 	const auto module_start = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_start"));
+	THROW_LAST_ERROR_IF_NULL(module_start);
 	const auto module_stop = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_stop"));
+	THROW_LAST_ERROR_IF_NULL(module_stop);
 	module_func_t module_main;
+
+	// Initialize Criware stub and module stubs
+	CriStub criware_stub;
 
 	const struct sl_module_t
 	{
@@ -93,7 +99,7 @@ void Y6::VF5FS::Run()
 		const sl_module_t* sl_module;
 		const gs_module_t* gs_module;
 		const ct_module_t* ct_module;
-		void* cri_ptr = nullptr;
+		const icri* cri_ptr;
 		const char* root_path = "";
 		module_func_t* module_main;
 		vf5fs_game_config_t config;
@@ -103,6 +109,7 @@ void Y6::VF5FS::Run()
 	params.sl_module = &sl_module;
 	params.gs_module = &gs_module;
 	params.ct_module = &ct_module;
+	params.cri_ptr = &criware_stub;
 	params.module_main = &module_main;
 
 	// Kick off the game

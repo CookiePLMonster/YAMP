@@ -4,9 +4,6 @@
    the type library 'vf5fs-pxd-w64-retail'
 */
 
-// TODO: Turn icri into a proper class with virtual methods
-#include <cstddef>
-
 struct CriAtomExPlayerConfigTag;
 struct CriManaFrameInfo;
 struct CriManaTextureBuffersYUV;
@@ -14,13 +11,6 @@ struct CriManaPlaybackBasicWorkConfig;
 struct CriManaPlaybackExWorkConfig;
 struct CriAtomExStandardVoicePoolConfigTag;
 struct CriAtomExWaveformInfoTag;
-struct icriVtbl;
-
-/* 5575 */
-struct icri
-{
-  icriVtbl *vfptr;
-};
 
 /* 720 */
 enum CriManaPlayerStatus
@@ -36,14 +26,6 @@ enum CriManaPlayerStatus
   CRIMANAPLAYER_STATUS_ENUM_SIZE_IS_4BYTES = 0x7FFFFFFF,
 };
 
-/* 5590 */
-union $06BEEFCA05CAD6AD7CC614388AB1690D
-{
-	void* pad;
-  //void (__fastcall *~icri)(icri *pThis);
-  //void *(__fastcall *__vecDelDtor)(icri *pThis, unsigned int);
-};
-
 /* 723 */
 enum CriAtomExResumeModeTag
 {
@@ -52,82 +34,6 @@ enum CriAtomExResumeModeTag
   CRIATOMEX_RESUME_PREPARED_PLAYBACK = 0x2,
   CRIATOMEX_RESUME_MODE_RESERVED = 0x3,
   CRIATOMEX_RESUME_MODE_ENUM_SIZE_IS_4BYTES = 0x7FFFFFFF,
-};
-
-/* 5591 */
-struct icriVtbl
-{
-  struct CriAtomExPlayerTag *(__fastcall *criAtomExPlayer_Create)(icri *pThis, CriAtomExPlayerConfigTag *, void *, int);
-  std::byte gap8[72];
-  int (__fastcall *criAtomExPlayer_CalculateWorkSize)(icri *pThis, CriAtomExPlayerConfigTag *);
-  unsigned int (__fastcall *criAtomExPlayer_Start)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtomExPlayer_Stop)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtomExPlayer_StopWithoutReleaseTime)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtomExPlayer_ResetParameters)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtomExPlayer_UpdateAll)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtomExPlayer_SetPitch)(icri *pThis, struct CriAtomExPlayerTag *, float);
-  void (__fastcall *criAtomExPlayer_SetPan3dAngle)(icri *pThis, struct CriAtomExPlayerTag *, float);
-  void (__fastcall *criAtomExPlayer_Pause)(icri *pThis, struct CriAtomExPlayerTag *, int);
-  void (__fastcall *criAtomExPlayer_SetAisacControlByName)(icri *pThis, struct CriAtomExPlayerTag *, const char *, float);
-  int (__fastcall *criAtomExPlayer_IsPaused)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtom_ExecuteMain)(icri *pThis);
-  void (__fastcall *criAtomExPlayer_SetData)(icri *pThis, struct CriAtomExPlayerTag *, void *, int);
-  void (__fastcall *criAtomExPlayer_SetFormat)(icri *pThis, struct CriAtomExPlayerTag *, unsigned int);
-  void (__fastcall *criAtomExPlayer_SetNumChannels)(icri *pThis, struct CriAtomExPlayerTag *, int);
-  void (__fastcall *criAtomExPlayer_SetSamplingRate)(icri *pThis, struct CriAtomExPlayerTag *, int);
-  void (__fastcall *criAtomExPlayer_SetFile)(icri *pThis, struct CriAtomExPlayerTag *, struct CriFsBinderHnObjTag *, const char *);
-  void (__fastcall *criAtomExPlayer_LimitLoopCount)(icri *pThis, struct CriAtomExPlayerTag *, int);
-  void (__fastcall *criAtomExPlayer_SetVoicePriority)(icri *pThis, struct CriAtomExPlayerTag *, int);
-  int (__fastcall *criManaPlayer_CalculateHandleWorkSize)(icri *pThis);
-  struct CriManaPlayerTag *(__fastcall *criManaPlayer_Create)(icri *pThis, void *, int);
-  void (__fastcall *criManaPlayer_Destroy)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_SetFile)(icri *pThis, struct CriManaPlayerTag *, struct CriFsBinderHnObjTag *, const char *);
-  void (__fastcall *criManaPlayer_Start)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_Stop)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_StopAndWaitCompletion)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_Pause)(icri *pThis, struct CriManaPlayerTag *, int);
-  int (__fastcall *criManaPlayer_IsPaused)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_GetTime)(icri *pThis, struct CriManaPlayerTag *, unsigned __int64 *, unsigned __int64 *);
-  CriManaPlayerStatus (__fastcall *criManaPlayer_GetStatus)(icri *pThis, struct CriManaPlayerTag *);
-  int (__fastcall *criManaPlayer_ReferFrame)(icri *pThis, struct CriManaPlayerTag *, CriManaFrameInfo *);
-  int (__fastcall *criManaPlayer_IsFrameOnTime)(icri *pThis, struct CriManaPlayerTag *, CriManaFrameInfo *);
-  void (__fastcall *criManaPlayer_CopyFrameToBuffersYUV)(icri *pThis, struct CriManaPlayerTag *, CriManaFrameInfo *, CriManaTextureBuffersYUV *);
-  void (__fastcall *criManaPlayer_DiscardFrame)(icri *pThis, struct CriManaPlayerTag *, CriManaFrameInfo *);
-  float (__fastcall *criManaPlayer_GetVolume)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_SetVolume)(icri *pThis, struct CriManaPlayerTag *, float);
-  int (__fastcall *criManaPlayer_GetPlaybackWorkParam)(icri *pThis, struct CriManaPlayerTag *, CriManaPlaybackBasicWorkConfig *, CriManaPlaybackExWorkConfig *);
-  int (__fastcall *criManaPlayer_CalculatePlaybackWorkSize)(icri *pThis, struct CriManaPlayerTag *, CriManaPlaybackBasicWorkConfig *, CriManaPlaybackExWorkConfig *);
-  void (__fastcall *criManaPlayer_SetPlaybackWork)(icri *pThis, struct CriManaPlayerTag *, CriManaPlaybackBasicWorkConfig *, CriManaPlaybackExWorkConfig *, void *, int);
-  void (__fastcall *criManaPlayer_FreePlaybackWork)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_Prepare)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criManaPlayer_DecodeHeader)(icri *pThis, struct CriManaPlayerTag *);
-  void (__fastcall *criMana_SyncMasterTimer)(icri *pThis);
-  void (__fastcall *criMana_ExecuteMain)(icri *pThis);
-  $06BEEFCA05CAD6AD7CC614388AB1690D ___u45;
-  void *(__fastcall *alloc)(icri *pThis, unsigned __int64, unsigned __int64);
-  void (__fastcall *free)(icri *pThis, void *);
-  int (__fastcall *criAtomEx_CalculateWorkSizeForRegisterAcfData)(icri *pThis, void *, int);
-  void (__fastcall *criAtomEx_RegisterAcfData)(icri *pThis, void *, int, void *, int);
-  void (__fastcall *criAtomEx_UnregisterAcf)(icri *pThis);
-  int (__fastcall *criAtomEx_CalculateWorkSizeForDspBusSetting)(icri *pThis, const char *);
-  int (__fastcall *criAtomEx_CalculateWorkSizeForDspBusSettingFromAcfData)(icri *pThis, void *, int, const char *);
-  void (__fastcall *criAtomEx_AttachDspBusSetting)(icri *pThis, const char *, void *, int);
-  struct CriAtomExVoicePoolTag *(__fastcall *criAtomExVoicePool_AllocateStandardVoicePool)(icri *pThis, CriAtomExStandardVoicePoolConfigTag *, void *, int);
-  void (__fastcall *criAtomExVoicePool_Free)(icri *pThis, struct CriAtomExVoicePoolTag *);
-  void (__fastcall *criAtomDbas_Destroy)(icri *pThis, int);
-  void (__fastcall *criAtomEx_DetachDspBusSetting)(icri *pThis);
-  void (__fastcall *criAtomEx_ExecuteMain)(icri *pThis);
-  void (__fastcall *criAtomExPlayer_SetBusSendLevelByName)(icri *pThis, struct CriAtomExPlayerTag *, const char *, float);
-  void (__fastcall *criAtomExPlayer_SetBusSendLevelOffsetByName)(icri *pThis, struct CriAtomExPlayerTag *, const char *, float);
-  unsigned int (__fastcall *criAtomExPlayer_Prepare)(icri *pThis, struct CriAtomExPlayerTag *);
-  void (__fastcall *criAtomExPlayer_SetAisacControlById)(icri *pThis, struct CriAtomExPlayerTag *, unsigned int, float);
-  void (__fastcall *criAtomExPlayer_Resume)(icri *pThis, struct CriAtomExPlayerTag *, CriAtomExResumeModeTag);
-  void (__fastcall *criAtomExPlayer_Update)(icri *pThis, struct CriAtomExPlayerTag *, unsigned int);
-  void (__fastcall *unmount)(icri *pThis, unsigned int);
-  void (__fastcall *remount)(icri *pThis, unsigned int);
-  void (__fastcall *criAtomExPlayer_SetVoicePoolIdentifier)(icri *pThis, struct CriAtomExPlayerTag *, unsigned int);
-  void (__fastcall *criAtomExPlayer_SetDspParameter)(icri *pThis, struct CriAtomExPlayerTag *, int, float);
-  int (__fastcall *criAtomExAcb_GetWaveformInfoByName)(icri *pThis, struct CriAtomExAcbTag *, const char *, CriAtomExWaveformInfoTag *);
 };
 
 /* 724 */
@@ -364,3 +270,87 @@ struct CriAtomExWaveformInfoTag
   unsigned int reserved[1];
 };
 
+class __declspec(novtable) icri
+{
+public:
+	virtual struct CriAtomExPlayerTag *criAtomExPlayer_Create(CriAtomExPlayerConfigTag *, void *, int) = 0;
+	// These are private or never used, as IDA defined them as a "gap"
+	virtual void gap1() = 0;
+	virtual void gap2() = 0;
+	virtual void gap3() = 0;
+	virtual void gap4() = 0;
+	virtual void gap5() = 0;
+	virtual void gap6() = 0;
+	virtual void gap7() = 0;
+	virtual void gap8() = 0;
+	virtual void gap9() = 0;
+	virtual int criAtomExPlayer_CalculateWorkSize(CriAtomExPlayerConfigTag *) = 0;
+	virtual unsigned int criAtomExPlayer_Start(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtomExPlayer_Stop(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtomExPlayer_StopWithoutReleaseTime(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtomExPlayer_ResetParameters(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtomExPlayer_UpdateAll(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtomExPlayer_SetPitch(struct CriAtomExPlayerTag *, float) = 0;
+	virtual void criAtomExPlayer_SetPan3dAngle(struct CriAtomExPlayerTag *, float) = 0;
+	virtual void criAtomExPlayer_Pause(struct CriAtomExPlayerTag *, int) = 0;
+	virtual void criAtomExPlayer_SetAisacControlByName(struct CriAtomExPlayerTag *, const char *, float) = 0;
+	virtual int criAtomExPlayer_IsPaused(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtom_ExecuteMain() = 0;
+	virtual void criAtomExPlayer_SetData(struct CriAtomExPlayerTag *, void *, int) = 0;
+	virtual void criAtomExPlayer_SetFormat(struct CriAtomExPlayerTag *, unsigned int) = 0;
+	virtual void criAtomExPlayer_SetNumChannels(struct CriAtomExPlayerTag *, int) = 0;
+	virtual void criAtomExPlayer_SetSamplingRate(struct CriAtomExPlayerTag *, int) = 0;
+	virtual void criAtomExPlayer_SetFile(struct CriAtomExPlayerTag *, struct CriFsBinderHnObjTag *, const char *) = 0;
+	virtual void criAtomExPlayer_LimitLoopCount(struct CriAtomExPlayerTag *, int) = 0;
+	virtual void criAtomExPlayer_SetVoicePriority(struct CriAtomExPlayerTag *, int) = 0;
+	virtual int criManaPlayer_CalculateHandleWorkSize() = 0;
+	virtual struct CriManaPlayerTag* criManaPlayer_Create(void *, int) = 0;
+	virtual void criManaPlayer_Destroy(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_SetFile(struct CriManaPlayerTag *, struct CriFsBinderHnObjTag *, const char *) = 0;
+	virtual void criManaPlayer_Start(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_Stop(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_StopAndWaitCompletion(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_Pause(struct CriManaPlayerTag *, int) = 0;
+	virtual int criManaPlayer_IsPaused(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_GetTime(struct CriManaPlayerTag *, unsigned __int64 *, unsigned __int64 *) = 0;
+	virtual CriManaPlayerStatus criManaPlayer_GetStatus(struct CriManaPlayerTag *) = 0;
+	virtual int criManaPlayer_ReferFrame(struct CriManaPlayerTag *, CriManaFrameInfo *) = 0;
+	virtual int criManaPlayer_IsFrameOnTime(struct CriManaPlayerTag *, CriManaFrameInfo *) = 0;
+	virtual void criManaPlayer_CopyFrameToBuffersYUV(struct CriManaPlayerTag *, CriManaFrameInfo *, CriManaTextureBuffersYUV *) = 0;
+	virtual void criManaPlayer_DiscardFrame(struct CriManaPlayerTag *, CriManaFrameInfo *) = 0;
+	virtual float criManaPlayer_GetVolume(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_SetVolume(struct CriManaPlayerTag *, float) = 0;
+	virtual int criManaPlayer_GetPlaybackWorkParam(struct CriManaPlayerTag *, CriManaPlaybackBasicWorkConfig *, CriManaPlaybackExWorkConfig *) = 0;
+	virtual int criManaPlayer_CalculatePlaybackWorkSize(struct CriManaPlayerTag *, CriManaPlaybackBasicWorkConfig *, CriManaPlaybackExWorkConfig *) = 0;
+	virtual void criManaPlayer_SetPlaybackWork(struct CriManaPlayerTag *, CriManaPlaybackBasicWorkConfig *, CriManaPlaybackExWorkConfig *, void *, int) = 0;
+	virtual void criManaPlayer_FreePlaybackWork(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_Prepare(struct CriManaPlayerTag *) = 0;
+	virtual void criManaPlayer_DecodeHeader(struct CriManaPlayerTag *) = 0;
+	virtual void criMana_SyncMasterTimer() = 0;
+	virtual void criMana_ExecuteMain() = 0;
+	virtual ~icri() { };
+	virtual void *alloc(size_t size, size_t align) = 0;
+	virtual void free(void *) = 0;
+	virtual int criAtomEx_CalculateWorkSizeForRegisterAcfData(void *, int) = 0;
+	virtual void criAtomEx_RegisterAcfData(void *, int, void *, int) = 0;
+	virtual void criAtomEx_UnregisterAcf() = 0;
+	virtual int criAtomEx_CalculateWorkSizeForDspBusSetting(const char *) = 0;
+	virtual int criAtomEx_CalculateWorkSizeForDspBusSettingFromAcfData(void *, int, const char *) = 0;
+	virtual void criAtomEx_AttachDspBusSetting(const char *, void *, int) = 0;
+	virtual struct CriAtomExVoicePoolTag *criAtomExVoicePool_AllocateStandardVoicePool(CriAtomExStandardVoicePoolConfigTag *, void *, int) = 0;
+	virtual void criAtomExVoicePool_Free(struct CriAtomExVoicePoolTag *) = 0;
+	virtual void criAtomDbas_Destroy(int) = 0;
+	virtual void criAtomEx_DetachDspBusSetting() = 0;
+	virtual void criAtomEx_ExecuteMain() = 0;
+	virtual void criAtomExPlayer_SetBusSendLevelByName(struct CriAtomExPlayerTag *, const char *, float) = 0;
+	virtual void criAtomExPlayer_SetBusSendLevelOffsetByName(struct CriAtomExPlayerTag *, const char *, float) = 0;
+	virtual unsigned int criAtomExPlayer_Prepare(struct CriAtomExPlayerTag *) = 0;
+	virtual void criAtomExPlayer_SetAisacControlById(struct CriAtomExPlayerTag *, unsigned int, float) = 0;
+	virtual void criAtomExPlayer_Resume(struct CriAtomExPlayerTag *, CriAtomExResumeModeTag) = 0;
+	virtual void criAtomExPlayer_Update(struct CriAtomExPlayerTag *, unsigned int) = 0;
+	virtual void unmount(unsigned int) = 0;
+	virtual void remount(unsigned int) = 0;
+	virtual void criAtomExPlayer_SetVoicePoolIdentifier(struct CriAtomExPlayerTag *, unsigned int) = 0;
+	virtual void criAtomExPlayer_SetDspParameter(struct CriAtomExPlayerTag *, int, float) = 0;
+	virtual int criAtomExAcb_GetWaveformInfoByName(struct CriAtomExAcbTag *, const char *, CriAtomExWaveformInfoTag *) = 0;
+};
