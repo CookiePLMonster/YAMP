@@ -6,6 +6,9 @@
 
 #include "criware/CriStub.h"
 
+#include "Y6/gs.h"
+#include "Y6/Imports.h"
+
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
 // Contexts
@@ -16,15 +19,6 @@ struct sl_context_t
 	uint32_t tag_id = 0x6C73424C;
 	uint32_t version = 0x40601;
 	uint32_t size_of_struct = sizeof(decltype(*this)); // Should be 61440 when complete
-
-	// NOTE: This structure won't be used until size_of_struct is correct
-};
-
-struct gs_context_t
-{
-	uint32_t tag_id = 0x7367424C;
-	uint32_t version = 0x40601;
-	uint32_t size_of_struct = sizeof(decltype(*this)); // Should be 8128 when complete
 
 	// NOTE: This structure won't be used until size_of_struct is correct
 };
@@ -40,7 +34,6 @@ struct ct_context_t
 // TODO: Later these can be put by value, for now put them on the heap to make full use of page heap
 // and catch any out-of-bounds access
 sl_context_t* g_sl_context = new sl_context_t;
-gs_context_t* g_gs_context = new gs_context_t;
 ct_context_t* g_ct_context = new ct_context_t;
 
 // Configs
@@ -71,6 +64,10 @@ void Y6::VF5FS::Run()
 	THROW_LAST_ERROR_IF_NULL(module_stop);
 	module_func_t module_main;
 
+	// Patch up structures and do post-DllMain work here
+	// Saves having to reimplement all the complex constructors and data types
+	gs::context_t* game_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
+
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;
 
@@ -80,12 +77,13 @@ void Y6::VF5FS::Run()
 		sl_context_t* context = g_sl_context;
 	} sl_module;
 	
-	const struct gs_module_t
+	struct gs_module_t
 	{
 		size_t size = sizeof(decltype(*this)); // Should be 80 when complete, but other fields are unknown so far
-		gs_context_t* context = g_gs_context;
+		gs::context_t* context;
 		uint8_t pad[64];
 	} gs_module;
+	gs_module.context = game_context_instance;
 
 	const struct ct_module_t
 	{
