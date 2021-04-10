@@ -17,7 +17,7 @@ workspace "*"
 			["Resources"] = "source/**.rc"
 	}
 
-	files { "source/*.h", "source/*.cpp", "source/resources/*.rc", "source/wil/*" }
+	files { "source/**.h", "source/**.cpp", "source/resources/*.rc" }
 
 	cppdialect "C++17"
 	staticruntime "on"
