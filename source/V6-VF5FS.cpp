@@ -8,6 +8,7 @@
 
 #include "Y6/gs.h"
 #include "Y6/Imports.h"
+#include "Y6/Patch.h"
 
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
@@ -53,7 +54,7 @@ static_assert(sizeof(vf5fs_game_config_t) == 8);
 
 using module_func_t = int(*)(size_t args, const void* argp);
 
-void Y6::VF5FS::Run()
+void Y6::VF5FS::Run(const RenderWindow& window)
 {
 	wil::unique_hmodule gameDll(LoadLibraryW(DLL_NAME));
 	THROW_LAST_ERROR_IF_NULL(gameDll);
@@ -67,6 +68,7 @@ void Y6::VF5FS::Run()
 	// Patch up structures and do post-DllMain work here
 	// Saves having to reimplement all the complex constructors and data types
 	gs::context_t* game_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
+	PatchGs(game_context_instance, window);
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;
