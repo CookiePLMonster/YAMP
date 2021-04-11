@@ -1,6 +1,7 @@
 #include "Patch.h"
 
 #include "file_access.h"
+#include "../pxd_types.h"
 
 #include "../wil/common.h"
 #include "../Utils/MemoryMgr.h"
