@@ -41,6 +41,9 @@ struct alignas(16) file_handle_internal_t : public file_handle_t
   unsigned int m_last_async_status;
   rwspinlock_t m_locked;
   file_handle_internal_t *mp_link;
+
+public:
+	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_internal_t) == 0x4D0);
 	
@@ -107,6 +110,9 @@ struct file_handle_lock
 	std::byte gap3[8];
 	CRITICAL_SECTION critSec2;
 	std::byte gap4[4];
+
+public:
+	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_lock) == 0x80);
 
@@ -114,6 +120,9 @@ struct file_handle_event
 {
 	void* gap;
 	HANDLE eventHandle;
+
+public:
+	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_event) == 16);
 

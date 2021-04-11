@@ -21,16 +21,9 @@ void PatchSl(sl::context_t* context)
 	}
 
 	// Create sync_archive_condvar
-	sl::file_handle_event* event1 = new sl::file_handle_event {};
-	sl::file_handle_event* event2 = new sl::file_handle_event {};
-	event1->eventHandle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
-	event2->eventHandle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
 
 	sl::file_handle_lock* lock = new sl::file_handle_lock {};
-	lock->eventHandle1 = sl::handle_create(event1, 3);
-	lock->eventHandle2 = sl::handle_create(event2, 3);
-	InitializeCriticalSectionAndSpinCount(&lock->critSec1, 4096);
-	InitializeCriticalSectionAndSpinCount(&lock->critSec2, 4096);
+	lock->_afterConstruct();
 
 	context->sync_archive_condvar = sl::handle_create(lock, 4);
 
@@ -46,6 +39,7 @@ void PatchSl(sl::context_t* context)
 
 	for (auto& handle : wil::make_range(handles, NUM_FILE_HANDLES))
 	{
+		handle._afterConstruct();
 		// TODO: Especially this
 		const auto handlePtr = &handle;
 		context->file_handle_pool.push_back(&handlePtr);

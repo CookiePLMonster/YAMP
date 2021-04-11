@@ -49,4 +49,30 @@ handle_t handle_create(void* ptr, uint32_t type)
     return result;
 }
 
+void file_handle_lock::_afterConstruct()
+{
+    sl::file_handle_event* event1 = new sl::file_handle_event {};
+    sl::file_handle_event* event2 = new sl::file_handle_event {};
+    event1->_afterConstruct();
+    event2->_afterConstruct();
+
+    eventHandle1 = sl::handle_create(event1, 3);
+    eventHandle2 = sl::handle_create(event2, 3);
+    InitializeCriticalSectionAndSpinCount(&critSec1, 4096);
+    InitializeCriticalSectionAndSpinCount(&critSec2, 4096);
+}
+
+void file_handle_event::_afterConstruct()
+{
+    eventHandle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
+}
+
+void file_handle_internal_t::_afterConstruct()
+{
+    sl::file_handle_event* event = new sl::file_handle_event {};
+	event->_afterConstruct();
+
+    m_async_event = sl::handle_create(event, 3);
+}
+
 }
