@@ -9,6 +9,8 @@
 #define NOMINMAX
 #include <Windows.h>
 
+class isl_file_access;
+
 // sl definitions for Yakuza 6
 
 namespace sl {
@@ -16,6 +18,13 @@ namespace sl {
 // These functions are implemented locally
 void spinlock_lock(spinlock_t& spinlock);
 void spinlock_unlock(spinlock_t& spinlock);
+
+enum FILE_SEEK
+{
+	FILE_SEEK_SET = 0x0,
+	FILE_SEEK_CURRENT = 0x1,
+	FILE_SEEK_FORCE_U32 = 0xFFFFFFFF,
+};
 
 
 template<typename T>
@@ -118,7 +127,9 @@ struct context_t
   uint32_t handle_max;
   uint32_t file_handle_max;
   uint32_t file_callback_thread_stack_size;
-  std::byte gap[1400];
+  std::byte gap3[12];
+  isl_file_access* p_file_access;
+  std::byte gap[1380];
   t_locked_queue<handle_internal_buffer_t> handle_free_queue;
   std::byte gap2[5472];
   handle_t sync_file_handle_pool;

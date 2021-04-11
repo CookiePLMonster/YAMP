@@ -1,5 +1,7 @@
 #include "Patch.h"
 
+#include "file_access.h"
+
 #include "../wil/common.h"
 
 void PatchSl(sl::context_t* context)
@@ -28,6 +30,9 @@ void PatchSl(sl::context_t* context)
 	InitializeCriticalSectionAndSpinCount(&lock->critSec2, 4096);
 
 	context->sync_file_handle_pool = sl::handle_create(lock, 4);
+
+	// Set up file access
+	context->p_file_access = GetFileAccessImpl();
 }
 
 void PatchGs(gs::context_t* context, const RenderWindow& window)
