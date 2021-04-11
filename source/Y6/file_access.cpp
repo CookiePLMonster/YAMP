@@ -32,10 +32,11 @@ static std::string WcharToUTF8(std::wstring_view text)
 
 class csl_file_access final : public isl_file_access
 {
-	virtual void create1() override
+	virtual bool open(const char* path, sl::handle_t handle) override
 	{
+		return true;
 	}
-	virtual void create2() override
+	virtual void create() override
 	{
 	}
 	virtual bool remove(const char*) override

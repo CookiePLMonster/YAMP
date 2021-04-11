@@ -4,6 +4,7 @@
 
 namespace sl {
 
+context_t* sm_context;
 handle_t* (*handle_create_internal)(handle_t* obj, void* ptr, uint32_t type);
 
 void spinlock_lock(spinlock_t& spinlock)

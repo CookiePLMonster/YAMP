@@ -1,8 +1,15 @@
 #pragma once
 
+#include <cassert>
+
 // Types that are (hopefully) identical across all games
 
 struct spinlock_t
+{
+  volatile unsigned int m_lock_status;
+};
+
+struct rwspinlock_t
 {
   volatile unsigned int m_lock_status;
 };
@@ -19,12 +26,24 @@ enum FILE_SEEK
 	FILE_SEEK_FORCE_U32 = 0xFFFFFFFF,
 };
 
+enum FILE_ASYNC_METHOD
+{
+	FILE_ASYNC_METHOD_OPEN = 0x0,
+	FILE_ASYNC_METHOD_CREATE = 0x1,
+	FILE_ASYNC_METHOD_CLOSE = 0x2,
+	FILE_ASYNC_METHOD_READ = 0x3,
+	FILE_ASYNC_METHOD_WRITE = 0x4,
+	FILE_ASYNC_METHOD_PRELOAD = 0x5,
+	FILE_ASYNC_METHOD_NUM = 0x6,
+	FILE_ASYNC_METHOD_INVALID = 0xFFFFFFFF,
+};
+
 struct handle_internal_t
 {
 	union
 	{
 		uint64_t m_qhandle;
-		union
+		struct
 		{
 			uint64_t m_serial : 12;
 			uint64_t m_ptr : 44;
@@ -45,6 +64,16 @@ struct handle_t
 		uint32_t m_handle;
 	} h;
 };
+
+struct alignas(8) file_handle_t
+{
+  char m_user_work[48];
+  void *m_h_native;
+  volatile uint64_t m_file_pointer;
+  handle_t m_handle;
+  char m_file_path[1040];
+};
+static_assert(sizeof(file_handle_t) == 1112);
 
 }
 
@@ -78,4 +107,31 @@ private:
 	t_locked_queue_node<T> *mp_tail;
 	spinlock_t m_sync;
 	uint32_t m_size;
+};
+
+template<typename T>
+class t_fixed_deque
+{
+public:
+	void push_back(const T* p)
+	{
+		assert(m_element_size < m_deque_size);
+		mp_element[m_index_end] = *p;
+		m_element_size++;
+		m_index_end = m_index_end != m_deque_size ? m_index_end + 1 : 0;
+	}
+
+	void _afterConstruct(uint32_t size)
+	{
+		// TODO: Proper allocator
+		m_deque_size = size;
+		mp_element = new T[size] {};
+	}
+
+private:
+	T *mp_element;
+	unsigned int m_deque_size;
+	unsigned int m_element_size;
+	unsigned int m_index_begin;
+	unsigned int m_index_end;
 };

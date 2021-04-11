@@ -20,7 +20,7 @@ void PatchSl(sl::context_t* context)
 		context->handle_free_queue.enqueue(&handle);
 	}
 
-	// Create sync_file_handle_pool
+	// Create sync_archive_condvar
 	sl::file_handle_event* event1 = new sl::file_handle_event {};
 	sl::file_handle_event* event2 = new sl::file_handle_event {};
 	event1->eventHandle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
@@ -32,10 +32,24 @@ void PatchSl(sl::context_t* context)
 	InitializeCriticalSectionAndSpinCount(&lock->critSec1, 4096);
 	InitializeCriticalSectionAndSpinCount(&lock->critSec2, 4096);
 
-	context->sync_file_handle_pool = sl::handle_create(lock, 4);
+	context->sync_archive_condvar = sl::handle_create(lock, 4);
 
 	// Set up file access
 	context->p_file_access = GetFileAccessImpl();
+
+	// Set up file_handle_pool
+	static constexpr uint32_t NUM_FILE_HANDLES = 250;
+	context->file_handle_pool._afterConstruct(NUM_FILE_HANDLES);
+
+	// TODO: Validate this
+	sl::file_handle_internal_t* handles = new sl::file_handle_internal_t[NUM_FILE_HANDLES] {};
+
+	for (auto& handle : wil::make_range(handles, NUM_FILE_HANDLES))
+	{
+		// TODO: Especially this
+		const auto handlePtr = &handle;
+		context->file_handle_pool.push_back(&handlePtr);
+	}
 }
 
 void PatchGs(gs::context_t* context, const RenderWindow& window)

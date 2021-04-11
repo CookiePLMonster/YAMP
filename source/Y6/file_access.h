@@ -7,8 +7,8 @@ class __declspec(novtable) isl_file_access
 {
 public:
 	virtual ~isl_file_access() {};
-	virtual void create1() = 0;
-	virtual void create2() = 0;
+	virtual bool open(const char* path, sl::handle_t handle) = 0;
+	virtual void create() = 0;
 	virtual bool remove(const char *) = 0;
 	virtual bool close(sl::handle_t) = 0;
 	virtual bool is_exist(const char *) = 0;
