@@ -66,6 +66,9 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	PatchSl(sl_context_instance);
 	PatchGs(gs_context_instance, window);
 
+	// Install hooks re-adding logging
+	ReinstateLogging(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::PRJ_TRAP));
+
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;
 
@@ -97,7 +100,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 		const gs_module_t* gs_module;
 		const ct_module_t* ct_module;
 		const icri* cri_ptr;
-		const char* root_path = "";
+		const char* root_path = ".";
 		module_func_t* module_main;
 		vf5fs_game_config_t config;
 	} params;

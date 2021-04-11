@@ -3,6 +3,8 @@
 #include "file_access.h"
 
 #include "../wil/common.h"
+#include "../Utils/MemoryMgr.h"
+#include "../Utils/Trampoline.h"
 
 void PatchSl(sl::context_t* context)
 {
@@ -41,4 +43,21 @@ void PatchGs(gs::context_t* context, const RenderWindow& window)
 	auto& export_context = context->export_context;
 	export_context.size_of_struct = sizeof(export_context);
 	export_context.sbgl_context.p_value[0] = window.GetD3D11Device();
+}
+
+static void prj_trap(const char* format, ...)
+{
+	char buf[512];
+	va_list vl;
+	va_start(vl, format);
+	vsprintf_s(buf, format, vl);
+	va_end(vl);
+
+	OutputDebugStringA(buf);
+}
+
+void ReinstateLogging(void* logFunc)
+{
+	Trampoline* t = Trampoline::MakeTrampoline(logFunc);
+	Memory::VP::InjectHook(logFunc, t->Jump(&prj_trap), PATCH_JUMP);
 }

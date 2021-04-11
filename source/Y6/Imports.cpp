@@ -20,6 +20,9 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::SL_HANDLE_CREATE:
 		symbolAddr = 0x1800214B0;
 		break;
+	case Symbol::PRJ_TRAP:
+		symbolAddr = 0x1801D2ED0;
+		break;
 	default: // Unreachable
 		symbolAddr = 0;
 		break;

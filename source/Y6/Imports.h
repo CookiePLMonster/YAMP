@@ -12,6 +12,7 @@ enum class Symbol
 	GS_CONTEXT_INSTANCE,
 
 	SL_HANDLE_CREATE,
+	PRJ_TRAP,
 };
 
 void* GetImportedFunction(HMODULE lib, Symbol symbol);

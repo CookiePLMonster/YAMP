@@ -1,5 +1,35 @@
 #include "file_access.h"
 
+#include <string_view>
+
+static std::wstring UTF8ToWchar(std::string_view text)
+{
+	std::wstring result;
+
+	const int count = MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
+	if ( count != 0 )
+	{
+		result.resize(count);
+		MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), count);
+	}
+
+	return result;
+}
+
+static std::string WcharToUTF8(std::wstring_view text)
+{
+	std::string result;
+
+	const int count = WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+	if ( count != 0 )
+	{
+		result.resize(count);
+		WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), count, nullptr, nullptr);
+	}
+
+	return result;
+}
+
 class csl_file_access final : public isl_file_access
 {
 	virtual void create1() override
@@ -16,9 +46,9 @@ class csl_file_access final : public isl_file_access
 	{
 		return false;
 	}
-	virtual bool is_exist(const char*) override
+	virtual bool is_exist(const char* path) override
 	{
-		return true;
+		return GetFileAttributesW(UTF8ToWchar(path).c_str()) != INVALID_FILE_ATTRIBUTES;
 	}
 	virtual unsigned __int64 read(sl::handle_t, void*, unsigned int) override
 	{
