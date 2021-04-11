@@ -7,6 +7,16 @@ namespace sl {
 context_t* sm_context;
 handle_t* (*handle_create_internal)(handle_t* obj, void* ptr, uint32_t type);
 
+void mutex_construct(mutex_t& mutex)
+{
+    InitializeCriticalSectionAndSpinCount(&mutex.m_cs, 4096);
+}
+
+void mutex_destruct(mutex_t& mutex)
+{
+    DeleteCriticalSection(&mutex.m_cs);
+}
+
 void spinlock_lock(spinlock_t& spinlock)
 {
     uint32_t itersToPause = 4;
@@ -58,8 +68,9 @@ void file_handle_lock::_afterConstruct()
 
     eventHandle1 = sl::handle_create(event1, 3);
     eventHandle2 = sl::handle_create(event2, 3);
-    InitializeCriticalSectionAndSpinCount(&critSec1, 4096);
-    InitializeCriticalSectionAndSpinCount(&critSec2, 4096);
+    
+    sl::mutex_construct(critSec1);
+    sl::mutex_construct(critSec2);
 }
 
 void file_handle_event::_afterConstruct()

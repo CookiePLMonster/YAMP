@@ -16,6 +16,14 @@ struct rwspinlock_t
 
 namespace sl {
 
+struct alignas(16) mutex_t
+{
+	CRITICAL_SECTION m_cs;
+};
+
+void mutex_construct(mutex_t& mutex);
+void mutex_destruct(mutex_t& mutex);
+
 void spinlock_lock(spinlock_t& spinlock);
 void spinlock_unlock(spinlock_t& spinlock);
 

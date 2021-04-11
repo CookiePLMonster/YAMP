@@ -106,15 +106,15 @@ struct file_handle_lock
 	handle_t eventHandle1;
 	handle_t eventHandle2;
 	std::byte gap2[20];
-	CRITICAL_SECTION critSec1;
-	std::byte gap3[8];
-	CRITICAL_SECTION critSec2;
-	std::byte gap4[4];
+	sl::mutex_t critSec1;
+	sl::mutex_t critSec2;
 
 public:
 	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_lock) == 0x80);
+static_assert(offsetof(file_handle_lock, critSec1) == 32);
+static_assert(offsetof(file_handle_lock, critSec2) == 80);
 
 struct file_handle_event
 {
