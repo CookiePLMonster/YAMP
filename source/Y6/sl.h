@@ -61,6 +61,11 @@ struct context_t
   std::byte gap2[5472];
   handle_t sync_file_handle_pool;
 };
+// Validate important offsets
+static_assert(offsetof(context_t, handles) == 0x70);
+static_assert(offsetof(context_t, p_file_access) == 0x90);
+static_assert(offsetof(context_t, handle_free_queue) == 0x600);
+static_assert(offsetof(context_t, sync_file_handle_pool) == 0x1B80);
 
 // Custom types
 struct file_handle_lock
