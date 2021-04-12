@@ -29,6 +29,8 @@ public: // TODO: Make private once I figure out how to deal with offsetof below
 	t_locked_queue<csl_file_async_request::req_item_t> m_request_queue[6];
 
 	static uint32_t sm_serial;
+
+	static uint32_t stub_thread_routine(uint64_t arg);
 };
 static_assert(sizeof(csl_file_async_request) == 496);
 static_assert(offsetof(csl_file_async_request, m_free_queue) == 0x50);

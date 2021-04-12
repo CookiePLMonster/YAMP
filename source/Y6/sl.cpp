@@ -65,6 +65,69 @@ handle_t semaphore_create(uint32_t initialCount)
     return result;
 }
 
+namespace {
+
+const DWORD MS_VC_EXCEPTION = 0x406D1388;
+#pragma pack(push,8)
+typedef struct tagTHREADNAME_INFO
+{
+    DWORD dwType; // Must be 0x1000.
+    LPCSTR szName; // Pointer to name (in user addr space).
+    DWORD dwThreadID; // Thread ID (-1=caller thread).
+    DWORD dwFlags; // Reserved for future use, must be zero.
+} THREADNAME_INFO;
+#pragma pack(pop)
+void SetThreadName(DWORD dwThreadID, const char* threadName) {
+    THREADNAME_INFO info;
+    info.dwType = 0x1000;
+    info.szName = threadName;
+    info.dwThreadID = dwThreadID;
+    info.dwFlags = 0;
+#pragma warning(push)
+#pragma warning(disable: 6320 6322)
+    __try{
+        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(ULONG_PTR), (ULONG_PTR*)&info);
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER){
+    }
+#pragma warning(pop)
+}
+}
+
+static DWORD WINAPI stub_thread_start_routine(LPVOID arg)
+{
+    // TODO: The original game code is full of XMM stores here
+    // Saving XMM state somehow?
+    thread_internal_t* thread = reinterpret_cast<thread_internal_t*>(arg);
+    SetThreadName(thread->thread_id, thread->sz_name);
+
+    // TODO: thread_sid_register
+    DWORD result = thread->p_routine(thread->arg);
+    // TODO: thread_sid_unregister
+
+    return result;
+}
+
+// TODO: Originally this function had more parameters
+handle_t thread_create(uint32_t (*p_routine)(uint64_t), uint64_t arg, const char* name)
+{  
+    thread_internal_t* thread = new thread_internal_t;
+    thread->p_routine = p_routine;
+    thread->arg = arg;
+    strcpy_s(thread->sz_name, name);
+    handle_t result = handle_create(thread, 1);
+
+    DWORD threadId;
+    thread->h_thread = CreateThread(nullptr, 0x10000, stub_thread_start_routine, thread, CREATE_SUSPENDED, &threadId);
+    if (thread->h_thread != nullptr)
+    {
+        thread->thread_id = threadId;
+        // TODO: Affinity and priority
+        ResumeThread(thread->h_thread);
+    }
+    return result;
+}
+
 handle_t handle_create(void* ptr, uint32_t type)
 {
     handle_t result{};

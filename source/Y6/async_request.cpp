@@ -15,4 +15,11 @@ csl_file_async_request::csl_file_async_request(isl_file_access** pp_interface, u
 	{
 		m_free_queue.enqueue(&mp_req_item_buf[max_req_item - i - 1]);
 	}
+
+	m_h_thread = sl::thread_create(stub_thread_routine, reinterpret_cast<uint64_t>(this), threadName);
+}
+
+uint32_t csl_file_async_request::stub_thread_routine(uint64_t arg)
+{
+	return uint32_t();
 }

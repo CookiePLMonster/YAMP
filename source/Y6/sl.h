@@ -22,6 +22,7 @@ extern handle_t* (*handle_create_internal)(handle_t* obj, void* ptr, uint32_t ty
 handle_t handle_create(void* ptr, uint32_t type);
 
 handle_t semaphore_create(uint32_t initialCount);
+handle_t thread_create(uint32_t (*p_routine)(uint64_t), uint64_t arg, const char* name);
 
 struct alignas(16) file_handle_internal_t : public file_handle_t
 {
@@ -61,6 +62,17 @@ struct alignas(16) semaphore_internal_t
 	uint32_t tag_id = 0x4D455348;
 	void* h_semaphore;
 };
+
+struct alignas(16) thread_internal_t
+{
+	uint32_t tag_id = 0x44525448;
+	char sz_name[28];
+	void *h_thread;
+	uint64_t thread_id;
+	uint64_t arg;
+	uint32_t (*p_routine)(uint64_t arg);
+};
+static_assert(sizeof(thread_internal_t) == 0x40);
 
 struct context_t
 {
