@@ -22,7 +22,7 @@ void PatchSl(sl::context_t* context)
 
 	// Create sync_archive_condvar
 
-	sl::file_handle_lock* lock = new sl::file_handle_lock {};
+	sl::file_handle_lock* lock = new sl::file_handle_lock;
 	lock->_afterConstruct();
 
 	context->sync_archive_condvar = sl::handle_create(lock, 4);
@@ -32,7 +32,7 @@ void PatchSl(sl::context_t* context)
 
 	// Set up file_handle_pool
 	static constexpr uint32_t NUM_FILE_HANDLES = 250;
-	context->file_handle_pool._afterConstruct(NUM_FILE_HANDLES);
+	context->file_handle_pool.reserve(NUM_FILE_HANDLES);
 
 	// TODO: Validate this
 	sl::file_handle_internal_t* handles = new sl::file_handle_internal_t[NUM_FILE_HANDLES] {};

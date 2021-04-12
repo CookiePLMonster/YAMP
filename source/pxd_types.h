@@ -6,12 +6,12 @@
 
 struct spinlock_t
 {
-  volatile unsigned int m_lock_status;
+  volatile unsigned int m_lock_status = 0;
 };
 
 struct rwspinlock_t
 {
-  volatile unsigned int m_lock_status;
+  volatile unsigned int m_lock_status = 0;
 };
 
 namespace sl {
@@ -19,6 +19,9 @@ namespace sl {
 struct alignas(16) mutex_t
 {
 	CRITICAL_SECTION m_cs;
+
+	mutex_t();
+	~mutex_t();
 };
 
 void mutex_construct(mutex_t& mutex);
@@ -111,10 +114,10 @@ public:
 	}
 
 private:
-	t_locked_queue_node<T> *mp_head;
-	t_locked_queue_node<T> *mp_tail;
+	t_locked_queue_node<T> *mp_head = nullptr;
+	t_locked_queue_node<T> *mp_tail = nullptr;
 	spinlock_t m_sync;
-	uint32_t m_size;
+	uint32_t m_size = 0;
 };
 
 template<typename T>
@@ -129,17 +132,17 @@ public:
 		m_index_end = m_index_end != m_deque_size ? m_index_end + 1 : 0;
 	}
 
-	void _afterConstruct(uint32_t size)
+	void reserve(unsigned int size)
 	{
-		// TODO: Proper allocator
+		assert(mp_element == nullptr);
+		mp_element = new T[size + 1];
 		m_deque_size = size;
-		mp_element = new T[size] {};
 	}
 
 private:
-	T *mp_element;
-	unsigned int m_deque_size;
-	unsigned int m_element_size;
-	unsigned int m_index_begin;
-	unsigned int m_index_end;
+	T *mp_element = nullptr;
+	unsigned int m_deque_size = 0;
+	unsigned int m_element_size = 0;
+	unsigned int m_index_begin = 0;
+	unsigned int m_index_end = 0;
 };

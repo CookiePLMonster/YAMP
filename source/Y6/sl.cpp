@@ -68,9 +68,6 @@ void file_handle_lock::_afterConstruct()
 
     eventHandle1 = sl::handle_create(event1, 3);
     eventHandle2 = sl::handle_create(event2, 3);
-    
-    sl::mutex_construct(critSec1);
-    sl::mutex_construct(critSec2);
 }
 
 void file_handle_event::_afterConstruct()
@@ -84,6 +81,16 @@ void file_handle_internal_t::_afterConstruct()
 	event->_afterConstruct();
 
     m_async_event = sl::handle_create(event, 3);
+}
+
+sl::mutex_t::mutex_t()
+{
+    mutex_construct(*this);
+}
+
+sl::mutex_t::~mutex_t()
+{
+    mutex_destruct(*this);
 }
 
 }
