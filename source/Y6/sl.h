@@ -13,12 +13,15 @@
 class isl_file_access;
 
 // sl definitions for Yakuza 6
+class csl_file_async_request;
 
 namespace sl {
 
 // Imported function
 extern handle_t* (*handle_create_internal)(handle_t* obj, void* ptr, uint32_t type);
 handle_t handle_create(void* ptr, uint32_t type);
+
+handle_t semaphore_create(uint32_t initialCount);
 
 struct alignas(16) file_handle_internal_t : public file_handle_t
 {
@@ -53,6 +56,12 @@ struct export_context_t
 	void *p_context;
 };
 
+struct alignas(16) semaphore_internal_t
+{
+	uint32_t tag_id = 0x4D455348;
+	void* h_semaphore;
+};
+
 struct context_t
 {
   uint32_t tag_id;
@@ -79,7 +88,10 @@ struct context_t
   uint32_t file_callback_thread_stack_size;
   std::byte gap3[12];
   isl_file_access* p_file_access;
-  std::byte gap[1380];
+  csl_file_async_request* p_file_async_request;
+  std::byte gap6[128];
+  csl_file_async_request* p_archive_async_request;
+  std::byte gap[1240];
   t_locked_queue<handle_internal_buffer_t> handle_free_queue;
   std::byte gap2[5408];
   spinlock_t sync_file_handle_pool;
@@ -91,6 +103,8 @@ struct context_t
 // Validate important offsets
 static_assert(offsetof(context_t, handles) == 0x70);
 static_assert(offsetof(context_t, p_file_access) == 0x90);
+static_assert(offsetof(context_t, p_file_async_request) == 0x98);
+static_assert(offsetof(context_t, p_archive_async_request) == 0x120);
 static_assert(offsetof(context_t, handle_free_queue) == 0x600);
 static_assert(offsetof(context_t, sync_file_handle_pool) == 0x1B40);
 static_assert(offsetof(context_t, file_handle_pool) == 0x1B48);
@@ -102,10 +116,13 @@ extern context_t* sm_context;
 // Custom types
 struct file_handle_lock
 {
-	std::byte gap1[4];
+	uint32_t tag_id = 0x4C575248;
 	handle_t eventHandle1;
 	handle_t eventHandle2;
-	std::byte gap2[20];
+	uint32_t unk1 = 0;
+	uint32_t unk2 = 0;
+	uint32_t unk3 = 0;
+	uint32_t unk4 = 0;
 	sl::mutex_t critSec1;
 	sl::mutex_t critSec2;
 

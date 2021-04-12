@@ -2,6 +2,7 @@
 
 #include "file_access.h"
 #include "../pxd_types.h"
+#include "async_request.h"
 
 #include "../wil/common.h"
 #include "../Utils/MemoryMgr.h"
@@ -44,6 +45,12 @@ void PatchSl(sl::context_t* context)
 		const auto handlePtr = &handle;
 		context->file_handle_pool.push_back(&handlePtr);
 	}
+
+	// Set up async file requests
+	static constexpr uint32_t NUM_REQUESTS = 64;
+
+	context->p_file_async_request = new csl_file_async_request(&context->p_file_access, NUM_REQUESTS);
+	context->p_archive_async_request = new csl_file_async_request(&context->p_file_access, NUM_REQUESTS);
 }
 
 void PatchGs(gs::context_t* context, const RenderWindow& window)

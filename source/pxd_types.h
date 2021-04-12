@@ -72,7 +72,7 @@ struct handle_t
 			uint32_t m_bank : 20;
 			uint32_t m_serial : 12;
 		} data;
-		uint32_t m_handle;
+		uint32_t m_handle = 0;
 	} h;
 };
 
@@ -91,7 +91,7 @@ static_assert(sizeof(file_handle_t) == 1112);
 template<typename T>
 struct t_locked_queue_node
 {
-	t_locked_queue_node<T> *volatile mp_next;
+	t_locked_queue_node<T> *volatile mp_next = nullptr;
 };
 
 template<typename T>

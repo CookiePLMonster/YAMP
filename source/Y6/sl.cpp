@@ -52,6 +52,19 @@ void spinlock_unlock(spinlock_t& spinlock)
     spinlock.m_lock_status = 0;
 }
 
+handle_t semaphore_create(uint32_t initialCount)
+{
+    handle_t result;
+    HANDLE semaphore = CreateSemaphoreW(nullptr, initialCount, LONG_MAX, nullptr);
+    if (semaphore != INVALID_HANDLE_VALUE)
+    {
+        semaphore_internal_t* sema = new semaphore_internal_t;
+        sema->h_semaphore = semaphore;
+        result = handle_create(sema, 2);
+    }
+    return result;
+}
+
 handle_t handle_create(void* ptr, uint32_t type)
 {
     handle_t result{};
