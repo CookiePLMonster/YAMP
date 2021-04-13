@@ -23,13 +23,14 @@ void PatchSl(sl::context_t* context)
 
 	// Create sync_archive_condvar
 
-	sl::file_handle_lock* lock = new sl::file_handle_lock;
+	sl::archive_lock* lock = new sl::archive_lock;
 	lock->_afterConstruct();
 
 	context->sync_archive_condvar = sl::handle_create(lock, 4);
 
 	// Set up file access
-	context->p_file_access = GetFileAccessImpl();
+	context->p_file_access = new csl_file_access;
+	context->p_archive_access = new csl_file_access_archive;
 
 	// Set up file_handle_pool
 	static constexpr uint32_t NUM_FILE_HANDLES = 250;
@@ -47,10 +48,10 @@ void PatchSl(sl::context_t* context)
 	}
 
 	// Set up async file requests
-	static constexpr uint32_t NUM_REQUESTS = 64;
+	static constexpr uint32_t NUM_REQUESTS = NUM_FILE_HANDLES + 64;
 
 	context->p_file_async_request = new csl_file_async_request(&context->p_file_access, NUM_REQUESTS);
-	context->p_archive_async_request = new csl_file_async_request(&context->p_file_access, NUM_REQUESTS);
+	context->p_archive_async_request = new csl_file_async_request(reinterpret_cast<isl_file_access**>(&context->p_archive_access), NUM_REQUESTS);
 }
 
 void PatchGs(gs::context_t* context, const RenderWindow& window)

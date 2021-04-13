@@ -6,6 +6,8 @@ namespace sl {
 
 context_t* sm_context;
 handle_t* (*handle_create_internal)(handle_t* obj, void* ptr, uint32_t type);
+void (*archive_lock_wlock)(handle_t handle);
+void (*archive_lock_wunlock)(handle_t handle);
 
 void mutex_construct(mutex_t& mutex)
 {
@@ -207,7 +209,7 @@ handle_t handle_create(void* ptr, uint32_t type)
     return result;
 }
 
-void file_handle_lock::_afterConstruct()
+void archive_lock::_afterConstruct()
 {
     sl::file_handle_event* event1 = new sl::file_handle_event {};
     sl::file_handle_event* event2 = new sl::file_handle_event {};

@@ -26,6 +26,12 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::PRJ_TRAP:
 		symbolAddr = 0x1801D2ED0;
 		break;
+	case Symbol::ARCHIVE_LOCK_WLOCK:
+		symbolAddr = 0x1800237E0;
+		break;
+	case Symbol::ARCHIVE_LOCK_WUNLOCK:
+		symbolAddr = 0x180023960;
+		break;
 	default: // Unreachable
 		symbolAddr = 0;
 		break;

@@ -57,6 +57,14 @@ enum FILE_ASYNC_METHOD
 	FILE_ASYNC_METHOD_INVALID = 0xFFFFFFFF,
 };
 
+enum ARCHIVE_FIND_RESULT
+{
+	ARCHIVE_FIND_FILE_FOUND = 0x0,
+	ARCHIVE_FIND_DIRECTORY_FOUND = 0x1,
+	ARCHIVE_FIND_NOT_FOUND = 0xFFFFFFFF,
+};
+
+
 struct handle_internal_t
 {
 	union
@@ -171,4 +179,44 @@ private:
 	unsigned int m_element_size = 0;
 	unsigned int m_index_begin = 0;
 	unsigned int m_index_end = 0;
+};
+
+template<typename T>
+class t_pointer_list
+{
+public:
+	void push_front(T* p_data)
+	{
+		T* top = mp_top;
+		if (top != nullptr)
+		{
+			// TODO: Cases like this might be why a "linker" class is needed?
+			// Right now, the sector cache needs to be public for this to work
+			top->m_prev = static_cast<decltype(top->m_prev)>(p_data - top);
+		}
+		else
+		{
+			mp_bottom = p_data;
+		}
+		p_data->m_next = top != nullptr ? static_cast<decltype(p_data->m_next)>(top - p_data) : 0;
+		p_data->m_prev = 0;
+		mp_top = p_data;
+	}
+
+	void push_back(T* p_data)
+	{
+		if (mp_top == nullptr)
+		{
+			push_front(p_data);
+			return;
+		}
+		mp_bottom->m_next = static_cast<decltype(mp_bottom->m_next)>(p_data - mp_bottom);
+		p_data->m_prev = static_cast<decltype(p_data->m_prev)>(mp_bottom - p_data);
+		p_data->m_next = 0;
+		mp_bottom = p_data;
+	}
+
+private:
+	T* mp_top = nullptr;
+	T* mp_bottom = nullptr;
 };

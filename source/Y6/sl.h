@@ -11,6 +11,7 @@
 #include "../sl_internal.h"
 
 class isl_file_access;
+class csl_file_access_archive;
 
 // sl definitions for Yakuza 6
 class csl_file_async_request;
@@ -106,7 +107,8 @@ struct context_t
   std::byte gap3[12];
   isl_file_access* p_file_access;
   csl_file_async_request* p_file_async_request;
-  std::byte gap6[128];
+  std::byte gap6[120];
+  csl_file_access_archive* p_archive_access;
   csl_file_async_request* p_archive_async_request;
   std::byte gap[1240];
   t_locked_queue<handle_internal_buffer_t> handle_free_queue;
@@ -121,6 +123,7 @@ struct context_t
 static_assert(offsetof(context_t, handles) == 0x70);
 static_assert(offsetof(context_t, p_file_access) == 0x90);
 static_assert(offsetof(context_t, p_file_async_request) == 0x98);
+static_assert(offsetof(context_t, p_archive_access) == 0x118);
 static_assert(offsetof(context_t, p_archive_async_request) == 0x120);
 static_assert(offsetof(context_t, handle_free_queue) == 0x600);
 static_assert(offsetof(context_t, sync_file_handle_pool) == 0x1B40);
@@ -131,7 +134,7 @@ static_assert(offsetof(context_t, sync_archive_condvar) == 0x1B80);
 extern context_t* sm_context;
 
 // Custom types
-struct file_handle_lock
+struct archive_lock
 {
 	uint32_t tag_id = 0x4C575248;
 	handle_t eventHandle1;
@@ -146,9 +149,9 @@ struct file_handle_lock
 public:
 	void _afterConstruct();
 };
-static_assert(sizeof(file_handle_lock) == 0x80);
-static_assert(offsetof(file_handle_lock, critSec1) == 32);
-static_assert(offsetof(file_handle_lock, critSec2) == 80);
+static_assert(sizeof(archive_lock) == 0x80);
+static_assert(offsetof(archive_lock, critSec1) == 32);
+static_assert(offsetof(archive_lock, critSec2) == 80);
 
 struct file_handle_event
 {
@@ -159,6 +162,11 @@ public:
 	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_event) == 16);
+
+// Y:LAD changed this to a recursive_rwspinlock
+extern void (*archive_lock_wlock)(handle_t handle);
+extern void (*archive_lock_wunlock)(handle_t handle);
+
 
 template<typename T>
 inline T* handle_instance(handle_t handle, uint32_t type)
