@@ -61,20 +61,16 @@ uint32_t csl_file_async_request::thread_routine()
 		req_item_t* item = nullptr;
 		for (size_t i = 0; i < 6; i++)
 		{
-			item = m_busy_queue->dequeue();
+			item = m_busy_queue[i].dequeue();
 			if (item != nullptr) break;
 
-			item = m_request_queue->dequeue();
+			item = m_request_queue[i].dequeue();
 			if (item != nullptr) break;
 		}
 
 		if (m_is_finish_req != 0 && item == nullptr) break; // Terminate thread
 
-		if (item == nullptr)
-		{
-			// HACK! This is wrong, fix it asap once we know why it can even happen. It shouldn't.
-			continue;
-		}
+		assert(item != nullptr);
 
 		// TODO: Scoped?
 		sl::spinlock_lock(item->m_locked);
@@ -112,11 +108,10 @@ uint32_t csl_file_async_request::thread_routine()
 		if (file != nullptr)
 		{
 			isl_file_access* file_access = *mpp_file_access;
-			const unsigned int busyFlags = file->m_flags >> 8;
 			file->m_error_code = 0;
 
 			// TODO: Did this code look like ths originally? It probably has plenty of duplications
-			if (busyFlags & 1)
+			if (file->m_flags & 0x100)
 			{
 				// TODO: Use sl pcounters
 				LARGE_INTEGER time;
@@ -215,6 +210,7 @@ uint32_t csl_file_async_request::thread_routine()
 					if (bytesRead == -1)
 					{
 						// TODO: Handle error, preferably without insane code duplication
+						assert(!"Unimplemented");
 					}
 				}
 				file->m_read_offset += bytesRead;
@@ -247,7 +243,7 @@ uint32_t csl_file_async_request::thread_routine()
 				}
 
 				sl::spinlock_lock(item->m_locked);
-				if (item->m_abort)
+				if (!item->m_abort)
 				{
 					item->m_status = (item->m_status & 0xFFF0000) | 0x200;
 					sl::spinlock_unlock(item->m_locked);
