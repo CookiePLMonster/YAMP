@@ -46,10 +46,15 @@ struct alignas(16) file_handle_internal_t : public file_handle_t
   rwspinlock_t m_locked;
   file_handle_internal_t *mp_link;
 
+  void end_async_request();
+  void callback(FILE_ASYNC_METHOD type, uint32_t status);
+
 public:
 	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_internal_t) == 0x4D0);
+
+inline void (*file_handle_destroy)(sl::file_handle_internal_t* p_handle);
 	
 struct export_context_t
 {
@@ -174,6 +179,11 @@ inline T* handle_instance(handle_t handle, uint32_t type)
 inline file_handle_internal_t* file_handle_instance(handle_t handle)
 {
 	return handle_instance<file_handle_internal_t>(handle, 5);
+}
+
+inline semaphore_internal_t* semaphore_handle_instance(handle_t handle)
+{
+	return handle_instance<semaphore_internal_t>(handle, 2);
 }
 
 };

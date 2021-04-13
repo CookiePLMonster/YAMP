@@ -22,6 +22,9 @@ struct alignas(16) mutex_t
 
 	mutex_t();
 	~mutex_t();
+
+	void lock();
+	void unlock();
 };
 
 void mutex_construct(mutex_t& mutex);
@@ -29,6 +32,11 @@ void mutex_destruct(mutex_t& mutex);
 
 void spinlock_lock(spinlock_t& spinlock);
 void spinlock_unlock(spinlock_t& spinlock);
+
+void rwspinlock_wlock(rwspinlock_t& spinlock);
+void rwspinlock_wunlock(rwspinlock_t& spinlock);
+void rwspinlock_rlock(rwspinlock_t& spinlock);
+void rwspinlock_runlock(rwspinlock_t& spinlock);
 
 enum FILE_SEEK
 {
@@ -111,6 +119,24 @@ public:
 		this->mp_tail = &p->m_node;
 
 		sl::spinlock_unlock(m_sync);
+	}
+
+	T* dequeue()
+	{
+		T* item = nullptr;
+		sl::spinlock_lock(m_sync);
+		t_locked_queue_node<T>* head = this->mp_head;
+		if (head != nullptr)
+		{
+			m_size--;
+			this->mp_head = head->mp_next;
+			if (this->mp_tail == head)
+				this->mp_tail = nullptr;
+			head->mp_next = nullptr;
+			item = reinterpret_cast<T*>(reinterpret_cast<char*>(head) - offsetof(T, m_node));
+		}
+		sl::spinlock_unlock(m_sync);
+		return item;
 	}
 
 private:

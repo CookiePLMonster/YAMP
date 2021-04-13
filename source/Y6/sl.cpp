@@ -52,6 +52,78 @@ void spinlock_unlock(spinlock_t& spinlock)
     spinlock.m_lock_status = 0;
 }
 
+void rwspinlock_wlock(rwspinlock_t& spinlock)
+{
+    uint32_t itersToPause = 4;
+    while (true)
+    {
+        uint32_t iters = 0;
+        while (spinlock.m_lock_status != 0)
+        {
+            if (++iters > 0x10000)
+            {
+                iters = 0;
+                SleepEx(0, TRUE);
+            }
+            _mm_pause();
+        }
+        if (InterlockedCompareExchange(&spinlock.m_lock_status, 0x80000000, 0) == 0)
+        {
+            break;
+        }
+        for (uint32_t pause = 0; pause != itersToPause; pause++)
+        {
+            _mm_pause();
+        }
+        itersToPause = std::max(itersToPause * 2, 512u);
+
+    }
+    _mm_mfence();
+}
+
+void rwspinlock_wunlock(rwspinlock_t& spinlock)
+{
+    // TODO: This might be wrong
+    _mm_mfence();
+    spinlock.m_lock_status = 0;
+}
+
+void rwspinlock_rlock(rwspinlock_t& spinlock)
+{
+    uint32_t itersToPause = 4;
+    while (true)
+    {
+        int32_t curStatus = spinlock.m_lock_status;
+        uint32_t iters = 0;
+        while ((spinlock.m_lock_status & 0x800000) != 0)
+        {
+            if (++iters > 0x10000)
+            {
+                iters = 0;
+                SleepEx(0, TRUE);
+            }
+            _mm_pause();
+            curStatus = spinlock.m_lock_status;
+        }
+        if (InterlockedCompareExchange(&spinlock.m_lock_status, curStatus + 1, curStatus) == curStatus)
+        {
+            break;
+        }
+        for (uint32_t pause = 0; pause != itersToPause; pause++)
+        {
+            _mm_pause();
+        }
+        itersToPause = std::max(itersToPause * 2, 512u);
+
+    }
+    _mm_mfence();
+}
+
+void rwspinlock_runlock(rwspinlock_t& spinlock)
+{
+    InterlockedExchangeAdd(&spinlock.m_lock_status, 0xFFFFFFFF);
+}
+
 handle_t semaphore_create(uint32_t initialCount)
 {
     handle_t result;
@@ -151,6 +223,76 @@ void file_handle_event::_afterConstruct()
     eventHandle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
 }
 
+void file_handle_internal_t::end_async_request()
+{
+    m_req_item_index = 0;
+    m_flags &= 0xFFFFFFFB;
+
+    file_handle_event* event = handle_instance<file_handle_event>(m_async_event, 3);
+    SetEvent(event->eventHandle);
+}
+
+void file_handle_internal_t::callback(FILE_ASYNC_METHOD type, uint32_t status)
+{
+    auto func = mp_callback_func;
+    auto handle = m_handle;
+    auto param = mp_callback_param;
+    if (m_callback_method == type)
+    {
+        if (func != nullptr)
+        {
+            sl::rwspinlock_rlock(m_locked);
+            uint32_t flags = m_flags >> 28;
+            sl::rwspinlock_runlock(m_locked);
+            while (flags & 1)
+            {
+                SleepEx(0, TRUE);
+                sl::rwspinlock_rlock(m_locked);
+                flags = m_flags >> 28;
+                sl::rwspinlock_runlock(m_locked);
+            }
+        }
+    }
+    else
+    {
+        func = nullptr;
+    }
+
+    sl::rwspinlock_wlock(m_locked);
+    m_last_async_status = status;
+    if ((m_flags & 0x1A) != 0)
+    {
+        func = nullptr;
+        m_flags &= 0xFBFFFFFF;
+    }
+    else if (func != nullptr)
+    {
+        m_flags |= 0x50000000;
+        if (type >= FILE_ASYNC_METHOD_PRELOAD)
+            m_callback_execute_thread = GetCurrentThreadId();
+    }
+    end_async_request();
+    sl::rwspinlock_wunlock(m_locked);
+    if (func != nullptr)
+    {
+        if (type == FILE_ASYNC_METHOD_READ || type == FILE_ASYNC_METHOD_WRITE)
+        {
+            assert(!"t_lockfree_stack unimplemented!");
+        }
+        else
+        {
+            func(m_handle, status, mp_callback_param);
+            sl::rwspinlock_wlock(m_locked);
+            m_callback_execute_thread = 0;
+            const unsigned int destroyFlag = m_flags >> 27;
+            m_flags &= 0x83FFFFFF;
+            sl::rwspinlock_wunlock(m_locked);
+            if (destroyFlag & 1)
+                sl::file_handle_destroy(this);
+        }
+    }
+}
+
 void file_handle_internal_t::_afterConstruct()
 {
     sl::file_handle_event* event = new sl::file_handle_event {};
@@ -167,6 +309,16 @@ sl::mutex_t::mutex_t()
 sl::mutex_t::~mutex_t()
 {
     mutex_destruct(*this);
+}
+
+void mutex_t::lock()
+{
+    EnterCriticalSection(&m_cs);
+}
+
+void mutex_t::unlock()
+{
+    LeaveCriticalSection(&m_cs);
 }
 
 }

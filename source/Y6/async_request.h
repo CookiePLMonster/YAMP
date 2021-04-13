@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sl.h"
+#include "file_access.h"
 
 class csl_file_async_request
 {
@@ -8,6 +9,8 @@ public:
 	csl_file_async_request(isl_file_access** pp_interface, uint32_t max_req_item);
 
 public: // TODO: Make private once I figure out how to deal with offsetof below
+	static constexpr size_t NUM_REQUEST_QUEUES = 6;
+
 	struct req_item_t
 	{
 	  t_locked_queue_node<csl_file_async_request::req_item_t> m_node;
@@ -25,8 +28,11 @@ public: // TODO: Make private once I figure out how to deal with offsetof below
 	sl::handle_t m_h_busy_file;
 	sl::mutex_t m_mutex_request;
 	t_locked_queue<csl_file_async_request::req_item_t> m_free_queue;
-	t_locked_queue<csl_file_async_request::req_item_t> m_busy_queue[6];
-	t_locked_queue<csl_file_async_request::req_item_t> m_request_queue[6];
+	t_locked_queue<csl_file_async_request::req_item_t> m_busy_queue[NUM_REQUEST_QUEUES];
+	t_locked_queue<csl_file_async_request::req_item_t> m_request_queue[NUM_REQUEST_QUEUES];
+
+private:
+	uint32_t thread_routine();
 
 	static uint32_t sm_serial;
 
