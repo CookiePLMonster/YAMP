@@ -321,6 +321,10 @@ csl_archive* csl_archive::create_instance(sl::handle_t handle)
 {
 	sl::archive_lock_wlock(sl::sm_context->sync_archive_condvar);
 	csl_archive* archive = sl::handle_instance<csl_archive>(handle, 6);
+	if (archive != nullptr)
+	{
+		archive->add_ref();
+	}
 	sl::archive_lock_wunlock(sl::sm_context->sync_archive_condvar);
 	return archive;
 }

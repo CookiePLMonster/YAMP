@@ -62,6 +62,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	sl::context_t* sl_context_instance = sl::sm_context = static_cast<sl::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_CONTEXT_INSTANCE));
 	gs::context_t* gs_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
 	sl::handle_create_internal = static_cast<decltype(sl::handle_create_internal)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_HANDLE_CREATE));
+	sl::file_handle_destroy = static_cast<decltype(sl::file_handle_destroy)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_FILE_HANDLE_DESTROY));
 	sl::archive_lock_wlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WLOCK));
 	sl::archive_lock_wunlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WUNLOCK));
 

@@ -122,4 +122,11 @@ public:
 	virtual void async_load_process_func(ASYNC_LOAD_STEP load_step) = 0;
 
 	static csl_archive* create_instance(sl::handle_t handle);
+
+	uint32_t add_ref() { return m_ref_count++; }
+
+public:
+	std::byte gap[16];
+	uint32_t m_ref_count;
 };
+static_assert(offsetof(csl_archive, m_ref_count) == 24);

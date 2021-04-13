@@ -160,12 +160,43 @@ uint32_t csl_file_async_request::thread_routine()
 			}
 			case 3:
 			{
-				// TODO: Do
-				assert(!"Unimplemented");
-				break;
+				// Command: Close
+				if ((file->m_flags & 0xC0) != 0)
+				{
+					file_access->close(item->m_h_file);
+					if ((file->m_flags & 1) == 0)
+					{
+						// TODO: sl::filecache_close
+					}
+				}
+				// TODO: This will be duplicated, figure out how it may have looked originally
+				// pls no gotos
+				m_h_busy_file = {};
+
+				uint32_t error = 0;
+				const uint32_t newStatus = error | (asyncMethod << 16) | 0x100;
+				sl::spinlock_lock(item->m_locked);
+				if (item->m_abort)
+				{
+					sl::rwspinlock_wlock(file->m_locked);
+					file->mp_callback_func = nullptr;
+					sl::rwspinlock_wunlock(file->m_locked);
+				}
+				item->m_status = newStatus;
+				sl::spinlock_unlock(item->m_locked);
+
+				file->callback(static_cast<sl::FILE_ASYNC_METHOD>(asyncMethod - 1), newStatus);
+				if (asyncMethod == 3)
+				{
+					sl::file_handle_destroy(file);
+				}
+				m_free_queue.enqueue(item);
+				skipSemaWait = lastSkipSemaWait;
+				continue;
 			}
 			case 4:
 			{
+				// Command: Read
 				int64_t bytesRead = 0;
 				const uint64_t offset = file->m_read_offset;
 				// TODO: mp_cache
@@ -209,8 +240,30 @@ uint32_t csl_file_async_request::thread_routine()
 
 					if (bytesRead == -1)
 					{
-						// TODO: Handle error, preferably without insane code duplication
-						assert(!"Unimplemented");
+						// TODO: This will be duplicated, figure out how it may have looked originally
+						// pls no gotos
+						m_h_busy_file = {};
+
+						uint32_t error = file->m_error_code != 0 ? file->m_error_code : 135;
+						const uint32_t newStatus = error | (asyncMethod << 16) | 0x100;
+						sl::spinlock_lock(item->m_locked);
+						if (item->m_abort)
+						{
+							sl::rwspinlock_wlock(file->m_locked);
+							file->mp_callback_func = nullptr;
+							sl::rwspinlock_wunlock(file->m_locked);
+						}
+						item->m_status = newStatus;
+						sl::spinlock_unlock(item->m_locked);
+
+						file->callback(static_cast<sl::FILE_ASYNC_METHOD>(asyncMethod - 1), newStatus);
+						if (asyncMethod == 3)
+						{
+							sl::file_handle_destroy(file);
+						}
+						m_free_queue.enqueue(item);
+						skipSemaWait = lastSkipSemaWait;
+						continue;
 					}
 				}
 				file->m_read_offset += bytesRead;
