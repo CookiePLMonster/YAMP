@@ -262,7 +262,7 @@ void file_handle_internal_t::callback(FILE_ASYNC_METHOD type, uint32_t status)
 
     sl::rwspinlock_wlock(m_locked);
     m_last_async_status = status;
-    if ((m_flags & 0x1A) != 0)
+    if ((m_flags & (1 << 0x1A)) != 0)
     {
         func = nullptr;
         m_flags &= 0xFBFFFFFF;
