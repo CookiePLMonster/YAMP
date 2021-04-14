@@ -17,6 +17,12 @@ public:
 	~RenderWindow();
 
 	ID3D11Device* GetD3D11Device() const { return m_device.get(); }
+	ID3D11DeviceContext* GetD3D11DeviceContext() const { return m_deviceContext.get(); }
+	IDXGISwapChain* GetSwapChain() const { return m_swapChain.get(); }
+
+	// TODO: Those are placeholers
+	uint32_t GetWidth() const { return 1280; }
+	uint32_t GetHeight() const { return 720; }
 
 private:
 	std::thread m_windowThread;

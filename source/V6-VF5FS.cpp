@@ -44,7 +44,16 @@ struct vf5fs_game_config_t
 };
 static_assert(sizeof(vf5fs_game_config_t) == 8);
 
-using module_func_t = int(*)(size_t args, const void* argp);
+struct alignas(16) vf5fs_execute_info_t
+{
+	size_t size_of_struct;
+	sbgl::cgs_device_context* p_device_context;
+	int status;
+	int result;
+	unsigned int output_texid;
+	std::byte gap1C[772];
+};
+static_assert(sizeof(vf5fs_execute_info_t) == 800);
 
 void Y6::VF5FS::Run(const RenderWindow& window)
 {
@@ -60,7 +69,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Patch up structures and do post-DllMain work here
 	// Saves having to reimplement all the complex constructors and data types
 	sl::context_t* sl_context_instance = sl::sm_context = static_cast<sl::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_CONTEXT_INSTANCE));
-	gs::context_t* gs_context_instance = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
+	gs::context_t* gs_context_instance = gs::sm_context = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
 	sl::handle_create_internal = static_cast<decltype(sl::handle_create_internal)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_HANDLE_CREATE));
 	sl::file_handle_destroy = static_cast<decltype(sl::file_handle_destroy)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_FILE_HANDLE_DESTROY));
 	sl::archive_lock_wlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WLOCK));
@@ -116,5 +125,20 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	params.module_main = &module_main;
 
 	// Kick off the game
-	module_start(sizeof(params), &params);
+	if (module_start(sizeof(params), &params) == 0)
+	{
+		GameLoop(module_main);
+	}
+}
+
+void Y6::VF5FS::GameLoop(module_func_t func)
+{
+	vf5fs_execute_info_t execute_info {};
+	execute_info.size_of_struct = sizeof(execute_info);
+	execute_info.p_device_context = gs::sm_context->p_device_context;
+
+	while (true)
+	{
+		if (func(sizeof(execute_info), &execute_info) != 0) break;
+	}
 }

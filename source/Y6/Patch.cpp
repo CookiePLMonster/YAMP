@@ -55,11 +55,21 @@ void PatchSl(sl::context_t* context)
 }
 
 void PatchGs(gs::context_t* context, const RenderWindow& window)
-{
+{	
+	// Initialize cgs_device_context
+	sbgl::cgs_device_context* device_context = new sbgl::cgs_device_context{};
+
+	context->sbgl_device.initialize(window);
+	
+	device_context->initialize(reinterpret_cast<sbgl::ccontext*>(context->sbgl_device.m_pD3DDeviceContext));
+	context->p_device_context = device_context;
+
 	// Fill the export context
 	auto& export_context = context->export_context;
 	export_context.size_of_struct = sizeof(export_context);
 	export_context.sbgl_context.p_value[0] = window.GetD3D11Device();
+	export_context.sbgl_context.p_value[1] = static_cast<sbgl::cdevice_native*>(&context->sbgl_device);
+	export_context.sbgl_context.p_value[2] = &context->sbgl_device.m_swap_chain;
 }
 
 static void prj_trap(const char* format, ...)
