@@ -17,8 +17,11 @@ RenderWindow::RenderWindow(HINSTANCE instance, int cmdShow)
 		const ATOM windowClass = RegisterClassEx(&wndClass);
 		THROW_LAST_ERROR_IF(windowClass == 0);
 
+		RECT clientArea { 0, 0, 1280, 720 };
+		AdjustWindowRect(&clientArea, WS_OVERLAPPEDWINDOW, FALSE);
+
 		wil::unique_hwnd window(CreateWindowExW(0, L"YAKUZA_VF5FS", L"Virtua Fighter 5: Final Showdown", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
-			1280, 720, nullptr, nullptr, instance, nullptr));
+			clientArea.right - clientArea.left, clientArea.bottom - clientArea.top, nullptr, nullptr, instance, nullptr));
 		THROW_LAST_ERROR_IF_NULL(window);
 
 		// TODO: Set up proper feature levels and a debug layer
