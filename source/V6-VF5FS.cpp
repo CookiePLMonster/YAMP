@@ -55,6 +55,23 @@ struct alignas(16) vf5fs_execute_info_t
 };
 static_assert(sizeof(vf5fs_execute_info_t) == 800);
 
+static void ImportFunctions(HMODULE dll)
+{
+	using namespace Imports;
+	auto Import = [dll](auto& var, auto symbol)
+	{
+		var = static_cast<std::decay_t<decltype(var)>>(GetImportedFunction(dll, symbol));
+	};
+
+	Import(sl::sm_context, Symbol::SL_CONTEXT_INSTANCE);
+	Import(gs::sm_context, Symbol::GS_CONTEXT_INSTANCE);
+	Import(sl::handle_create_internal, Symbol::SL_HANDLE_CREATE);
+	Import(sl::file_handle_destroy, Symbol::SL_FILE_HANDLE_DESTROY);
+	Import(sl::archive_lock_wlock, Symbol::ARCHIVE_LOCK_WLOCK);
+	Import(sl::archive_lock_wunlock, Symbol::ARCHIVE_LOCK_WUNLOCK);
+	Import(cgs_device_context::reset_state_all_internal, Symbol::DEVICE_CONTEXT_RESET_STATE_ALL);
+}
+
 void Y6::VF5FS::Run(const RenderWindow& window)
 {
 	wil::unique_hmodule gameDll(LoadLibraryW(DLL_NAME));
@@ -68,16 +85,9 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 
 	// Patch up structures and do post-DllMain work here
 	// Saves having to reimplement all the complex constructors and data types
-	sl::context_t* sl_context_instance = sl::sm_context = static_cast<sl::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_CONTEXT_INSTANCE));
-	gs::context_t* gs_context_instance = gs::sm_context = static_cast<gs::context_t*>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::GS_CONTEXT_INSTANCE));
-	sl::handle_create_internal = static_cast<decltype(sl::handle_create_internal)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_HANDLE_CREATE));
-	sl::file_handle_destroy = static_cast<decltype(sl::file_handle_destroy)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_FILE_HANDLE_DESTROY));
-	sl::archive_lock_wlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WLOCK));
-	sl::archive_lock_wunlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WUNLOCK));
-	cgs_device_context::reset_state_all_internal = static_cast<decltype(cgs_device_context::reset_state_all_internal)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::DEVICE_CONTEXT_RESET_STATE_ALL));
-
-	PatchSl(sl_context_instance);
-	PatchGs(gs_context_instance, window);
+	ImportFunctions(gameDll.get());
+	PatchSl(sl::sm_context);
+	PatchGs(gs::sm_context, window);
 
 	// Install hooks re-adding logging
 	ReinstateLogging(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::PRJ_TRAP));
@@ -90,7 +100,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 		size_t size = sizeof(decltype(*this));
 		sl::context_t* context;
 	} sl_module;
-	sl_module.context = sl_context_instance;
+	sl_module.context = sl::sm_context;
 	
 	struct gs_module_t
 	{
@@ -98,7 +108,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 		gs::context_t* context;
 		uint8_t pad[64];
 	} gs_module;
-	gs_module.context = gs_context_instance;
+	gs_module.context = gs::sm_context;
 
 	const struct ct_module_t
 	{
