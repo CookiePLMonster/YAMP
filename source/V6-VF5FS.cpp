@@ -47,7 +47,7 @@ static_assert(sizeof(vf5fs_game_config_t) == 8);
 struct alignas(16) vf5fs_execute_info_t
 {
 	size_t size_of_struct;
-	sbgl::cgs_device_context* p_device_context;
+	cgs_device_context* p_device_context;
 	int status;
 	int result;
 	unsigned int output_texid;
@@ -74,6 +74,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	sl::file_handle_destroy = static_cast<decltype(sl::file_handle_destroy)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::SL_FILE_HANDLE_DESTROY));
 	sl::archive_lock_wlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WLOCK));
 	sl::archive_lock_wunlock = static_cast<decltype(sl::archive_lock_wlock)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::ARCHIVE_LOCK_WUNLOCK));
+	cgs_device_context::reset_state_all_internal = static_cast<decltype(cgs_device_context::reset_state_all_internal)>(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::DEVICE_CONTEXT_RESET_STATE_ALL));
 
 	PatchSl(sl_context_instance);
 	PatchGs(gs_context_instance, window);

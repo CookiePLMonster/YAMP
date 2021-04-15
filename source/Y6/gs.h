@@ -6,6 +6,9 @@
 #include <d3d11.h>
 #include <xmmintrin.h>
 
+#include "../pxd_shader.h"
+#include "../pxd_types.h"
+
 class RenderWindow;
 
 enum sbgl_format_t
@@ -162,6 +165,8 @@ class ccontext_native : public ID3D11DeviceContext
 public:
 	struct desc_st
 	{
+		void reset(ID3D11RenderTargetView* pDepthStencilView, float depth_clear_value, unsigned int width, unsigned int height);
+
 		ID3D11RenderTargetView* m_ppRenderTargetView[8];
 		ID3D11DepthStencilView* m_pDepthStencilView;
 		unsigned int m_num_slots;
@@ -170,6 +175,8 @@ public:
 		float m_depth_clear_value;
 		__m128 m_p_fast_clear_color[8];
 	};
+
+	static constexpr GUID GUID_ContextPrivateData = { 0x0A84B07F7, 0x3BD0, 0x4C4E, 0x89, 0x90, 0xE9, 0xD5, 0xAF, 0x6E, 0xFB, 0xA2 };
 };
 static_assert(sizeof(ccontext_native) == sizeof(ID3D11DeviceContext*)); // If it's not, everything will fall apart
 
@@ -243,18 +250,120 @@ public:
 	void initialize(const RenderWindow& renderWindow);
 };
 
+}
+
+struct cgs_buffer
+{
+	volatile unsigned int m_ref_count;
+	rwspinlock_t m_sync;
+	unsigned int m_usage;
+	unsigned int m_size;
+	union
+	{
+		struct
+		{
+			uint64_t m_this : 48;
+			uint64_t m_counter : 16;
+		};
+		uint64_t m_uid;
+	} uid;
+	union
+	{
+		/*sbgl::cbase_buffer*/void *mp_sbgl_resource;
+		/*csbgl_staging_buffer_gs*/void *mp_sbgl_staging_resource;
+		/*csbgl_vertex_buffer_gs*/void *mp_sbgl_vertex_buffer;
+		/*csbgl_index_buffer_gs*/void *mp_sbgl_index_buffer;
+		/*csbgl_constant_buffer_gs*/void *mp_sbgl_constant_buffer;
+		/*csbgl_rw_buffer_gs*/void *mp_sbgl_rw_buffer;
+		/*csbgl_ro_buffer_gs*/void *mp_sbgl_ro_buffer;
+		/*csbgl_buffer_gs*/void *mp_sbgl_base_buffer;
+	} buffer;
+};
+
+struct alignas(16) cgs_cb
+{
+	cgs_buffer m_buffer;
+	char m_sbgl_resource_buf[32];
+	unsigned int m_user_flags;
+	unsigned int m_create_flags;
+};
+
+struct cgs_cb_pool
+{
+  cgs_cb_pool* mp_link = nullptr;
+  unsigned int m_cb_num = 0;
+  cgs_cb *mp_small_tbl[96][32];
+  cgs_cb *mp_large_tbl[96][32];
+  cgs_cb *mp_huge_tbl[96][32];
+};
+
+struct cgs_up_pool
+{
+	unsigned int m_vb_size;
+	unsigned int m_ib_size;
+	unsigned int m_vb_ptr;
+	unsigned int m_ib_ptr;
+	unsigned int m_current_stride;
+	unsigned int m_current_vertex_count;
+	unsigned int m_current_vertex_offset;
+	unsigned int m_current_index_count;
+	unsigned int m_current_index_offset;
+	unsigned int m_last_frame_counter_vb;
+	unsigned int m_last_frame_counter_ib;
+	cgs_up_pool* mp_link;
+	/*cgs_vb*/void *mp_vb; // We can ask the DLL to create those so there's no need to worry about their structure
+	/*cgs_ib*/void *mp_ib; // (for now?)
+	void *mp_push_polygon;
+	void *mp_push_line;
+};
+static_assert(sizeof(cgs_up_pool) == 88);
+
+class cgs_shader_uniform
+{
+public:
+	void initialize();
+
+public:
+	cgs_shader_uniform* mp_link = nullptr;
+	uint64_t m_dirty_status[2] {};
+	uint64_t m_uniform_status[94];
+	float m_clip_near;
+	float m_clip_far;
+	// Yakuza 6 doesn't have extend data, YLAD does
+	//unsigned int m_extend_data_size;
+	//void (*m_extend_data_reset_callback)(cgs_shader_uniform*, void*);
+	matrix m_mtx_world;
+	matrix m_mtx_view;
+	matrix m_mtx_projection;
+	matrix m_mtx_view_projection;
+	uniform_struct_base_t m_data;
+};
+static_assert(sizeof(cgs_shader_uniform) == 17200);
+
 class cgs_device_context
 {
 public:
-	void initialize(ccontext* p_context);
+	void initialize(sbgl::ccontext* p_context);
+	void reset_state_all()
+	{
+		reset_state_all_internal(this);
+	}
 
-	std::byte gap2[24];
-	ccontext* mp_sbgl_context;
-	std::byte gap[7920];
+	uint64_t m_dirty_state;
+	uint64_t m_dirty_state_gts;
+	uint64_t m_dirty_state_cs;
+	sbgl::ccontext* mp_sbgl_context;
+	/*csbgl_deferred_context*/void* mp_sbgl_deferred_context;
+	cgs_cb_pool* mp_cb_pool;
+	cgs_up_pool* mp_up_pool;
+	cgs_shader_uniform* mp_shader_uniform;
+	std::byte gap[7882];
+
+	static inline void (__thiscall *reset_state_all_internal)(cgs_device_context* obj);
 };
 static_assert(sizeof(cgs_device_context) == 7952);
-
-}
+static_assert(offsetof(cgs_device_context, mp_sbgl_context) == 24);
+static_assert(offsetof(cgs_device_context, mp_shader_uniform) == 56);
 
 namespace gs {
 
@@ -267,19 +376,26 @@ struct export_context_t
 
 struct context_t
 {
-  uint32_t tag_id; // 0x7367424C
-  uint32_t version; // 0x40601
-  uint32_t size_of_struct; // Should be 8128 when complete
-  uint32_t sbgl_initialize_flags;
-  export_context_t export_context;
-  std::byte gap[80];
-  sbgl::cgs_device_context* p_device_context;
-  sbgl::cdevice sbgl_device;
+	uint32_t tag_id; // 0x7367424C
+	uint32_t version; // 0x40601
+	uint32_t size_of_struct; // Should be 8128 when complete
+	uint32_t sbgl_initialize_flags;
+	export_context_t export_context;
+	std::byte gap[80];
+	cgs_device_context* p_device_context;
+	sbgl::cdevice sbgl_device;
+	std::byte gap2[32];
+	t_lockfree_stack<cgs_cb_pool> stack_cb_pool;
+	t_lockfree_stack<cgs_up_pool> stack_up_pool;
+	t_lockfree_stack<cgs_shader_uniform> stack_shader_uniform;
 };
 static_assert(offsetof(context_t, p_device_context) == 0xB0);
 static_assert(offsetof(context_t, sbgl_device) == 0xC0);
 static_assert(offsetof(context_t, sbgl_device.m_pD3DDeviceContext) == 0x150); // Redundant,but validates the assumption
 																			  // that m_pD3DDeviceContext
+static_assert(offsetof(context_t, stack_cb_pool) == 0x13E0);
+static_assert(offsetof(context_t, stack_up_pool) == 0x13E8);
+static_assert(offsetof(context_t, stack_shader_uniform) == 0x13F0);
 
 extern context_t* sm_context;
 

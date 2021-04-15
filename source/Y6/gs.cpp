@@ -8,17 +8,36 @@ context_t* sm_context;
 
 }
 
-namespace sbgl {
-
-void cgs_device_context::initialize(ccontext* p_context)
+void cgs_device_context::initialize(sbgl::ccontext* p_context)
 {
-	mp_sbgl_context = p_context;
+	if (p_context != nullptr)
+	{
+		mp_sbgl_context = p_context;
+
+		// Deliberately left as nullptr now, potentially unused (the DLL allocates its own pools)
+		mp_cb_pool = nullptr;
+		mp_up_pool = nullptr;
+		mp_shader_uniform = gs::sm_context->stack_shader_uniform.pop();
+		reset_state_all();
+
+		// TODO: Yakuza 6 returns an error code here??
+	}
 }
+
+namespace sbgl {
 
 void cdevice::initialize(const RenderWindow& renderWindow)
 {
 	m_swap_chain.initialize(renderWindow);
 	m_pD3DDeviceContext = renderWindow.GetD3D11DeviceContext();
+
+
+	// TODO: YLAD presents an empty frame here... Yakuza 6 doesn't seem to
+	// The game sets private data, then renders a frame, then resets private data
+	// For now, just do it directly
+	m_context_desc.reset(nullptr, 0.0f, 0, 0);
+	void* dataPtr = &m_context_desc;
+	m_pD3DDeviceContext->SetPrivateData(ccontext_native::GUID_ContextPrivateData, sizeof(dataPtr), &dataPtr);
 }
 
 HRESULT cswap_chain_common::initialize(const RenderWindow& window)
@@ -64,4 +83,27 @@ HRESULT cswap_chain_common::initialize(const RenderWindow& window)
 	return hr;
 }
 
+void ccontext_native::desc_st::reset(ID3D11RenderTargetView* pDepthStencilView, float depth_clear_value, unsigned int width, unsigned int height)
+{
+	for (size_t i = 0; i < 8; i++)
+	{
+		m_ppRenderTargetView[i] = nullptr;
+		m_p_fast_clear_color[i] = {};
+	}
+	m_num_slots = 0;
+	m_width = width;
+	m_height = 0;
+	m_depth_clear_value = depth_clear_value;
+}
+
+}
+
+void cgs_shader_uniform::initialize()
+{
+	m_clip_far = 0.0f;
+	m_clip_far = 1.0f;
+	m_data.m_data_material_modify.saturation = 1.0f;
+	m_data.m_data_material_modify.palette0 = -1;
+	m_data.m_data_material_modify.palette1 = -1;
+	m_data.m_data_material_modify._reserve0 = 1.0f;
 }

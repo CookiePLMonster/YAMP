@@ -6,12 +6,12 @@
 
 struct spinlock_t
 {
-  volatile unsigned int m_lock_status = 0;
+	volatile unsigned int m_lock_status = 0;
 };
 
 struct rwspinlock_t
 {
-  volatile unsigned int m_lock_status = 0;
+	volatile unsigned int m_lock_status = 0;
 };
 
 namespace sl {
@@ -219,4 +219,75 @@ public:
 private:
 	T* mp_top = nullptr;
 	T* mp_bottom = nullptr;
+};
+
+template<typename T>
+struct t_lockfree_ptr
+{
+	struct counter_ptr_t
+	{
+		union
+		{
+			struct
+			{
+				int64_t m_ptr : 48;
+				int64_t m_counter : 16;
+			} p;
+			uint64_t m_quad_ptr;
+		} val;
+	};
+
+	counter_ptr_t m_counter_ptr;
+};
+
+template<typename T>
+class t_lockfree_stack
+{
+public:
+	void push(T* p)
+	{
+		auto desired = m_top.m_counter_ptr.val;
+		decltype(desired) exchanged;
+		p->mp_link = reinterpret_cast<T*>(desired.p.m_ptr);
+		exchanged.p.m_ptr = reinterpret_cast<int64_t>(p);
+		exchanged.p.m_counter = desired.p.m_counter + 1;
+		while (desired.m_quad_ptr != InterlockedCompareExchange(&m_top.m_counter_ptr.val.m_quad_ptr, exchanged.m_quad_ptr,
+														desired.m_quad_ptr))
+		{
+			_mm_pause();
+			desired = m_top.m_counter_ptr.val;
+			p->mp_link = reinterpret_cast<T*>(desired.p.m_ptr);
+			exchanged.p.m_ptr = reinterpret_cast<int64_t>(p);
+			exchanged.p.m_counter = desired.p.m_counter + 1;
+		}
+	}
+
+	T* pop()
+	{
+		auto desired = m_top.m_counter_ptr.val;
+		T* result = reinterpret_cast<T*>(desired.p.m_ptr);
+		if (result == nullptr) return nullptr;
+
+		decltype(desired) exchanged;
+		exchanged.p.m_ptr = reinterpret_cast<int64_t>(result->mp_link);
+		exchanged.p.m_counter = desired.p.m_counter + 1;
+		do
+		{
+			if (desired.m_quad_ptr == InterlockedCompareExchange(&m_top.m_counter_ptr.val.m_quad_ptr, exchanged.m_quad_ptr,
+														desired.m_quad_ptr))
+			{
+				break;
+			}
+
+			desired = m_top.m_counter_ptr.val;
+			result = reinterpret_cast<T*>(desired.p.m_ptr);
+			exchanged.p.m_ptr = reinterpret_cast<int64_t>(result->mp_link);
+			exchanged.p.m_counter = desired.p.m_counter + 1;
+		}
+		while (result != nullptr);
+		return result;	
+	}
+
+private:
+	t_lockfree_ptr<T> m_top;
 };

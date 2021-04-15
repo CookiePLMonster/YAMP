@@ -32,6 +32,9 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::ARCHIVE_LOCK_WUNLOCK:
 		symbolAddr = 0x180023960;
 		break;
+	case Symbol::DEVICE_CONTEXT_RESET_STATE_ALL:
+		symbolAddr = 0x180008A90;
+		break;
 	default: // Unreachable
 		symbolAddr = 0;
 		break;

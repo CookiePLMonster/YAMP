@@ -17,6 +17,8 @@ enum class Symbol
 
 	ARCHIVE_LOCK_WLOCK,
 	ARCHIVE_LOCK_WUNLOCK,
+
+	DEVICE_CONTEXT_RESET_STATE_ALL
 };
 
 void* GetImportedFunction(HMODULE lib, Symbol symbol);

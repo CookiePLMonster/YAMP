@@ -57,9 +57,18 @@ void PatchSl(sl::context_t* context)
 void PatchGs(gs::context_t* context, const RenderWindow& window)
 {	
 	// Initialize cgs_device_context
-	sbgl::cgs_device_context* device_context = new sbgl::cgs_device_context{};
+	cgs_device_context* device_context = new cgs_device_context{};
 
 	context->sbgl_device.initialize(window);
+
+	static constexpr size_t NUM_CONTEXTES = 16; // TODO: Uneducated guess, real value comes from the init struct
+	for (size_t i = 0; i < 16; i++)
+	{
+		cgs_shader_uniform* uniform = new cgs_shader_uniform;
+		uniform->initialize();
+
+		context->stack_shader_uniform.push(uniform);
+	}
 	
 	device_context->initialize(reinterpret_cast<sbgl::ccontext*>(context->sbgl_device.m_pD3DDeviceContext));
 	context->p_device_context = device_context;
