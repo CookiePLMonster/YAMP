@@ -172,13 +172,14 @@ public:
 		unsigned int m_num_slots;
 		unsigned int m_width;
 		unsigned int m_height;
-		float m_depth_clear_value;
-		__m128 m_p_fast_clear_color[8];
+		float m_depth_clear_value; // Probably YLAD only
+		//__m128 m_p_fast_clear_color[8]; // YLAD only
 	};
 
 	static constexpr GUID GUID_ContextPrivateData = { 0x0A84B07F7, 0x3BD0, 0x4C4E, 0x89, 0x90, 0xE9, 0xD5, 0xAF, 0x6E, 0xFB, 0xA2 };
 };
 static_assert(sizeof(ccontext_native) == sizeof(ID3D11DeviceContext*)); // If it's not, everything will fall apart
+static_assert(sizeof(ccontext_native::desc_st) == 0x58); // TODO: Needs verification, but is almost sure to be correct
 
 class ccontext : public ccontext_native
 {
@@ -208,7 +209,7 @@ public:
 	unsigned int m_buffer_index;
 	unsigned __int32 m_num_buffers : 8;
 	unsigned __int32 m_type : 8;
-	//__m128 m_fast_clear_color; // TODO: Educated guess
+	//__m128 m_fast_clear_color; // TODO: Educated guess, YLAD only
 	std::byte gap[16];
 	sbgl::cswap_chain_common::window_st m_window;
 };
@@ -233,11 +234,14 @@ public:
 	unsigned int m_max_frame_latency;
 	timestamp_st m_timestamp;
 	ID3D11Query *m_pD3DQuery;
-	__m128 m_fast_clear_color;
+	//__m128 m_fast_clear_color; // YLAD only
 	__m128 m_p_border_color[256];
 	DXGI_ADAPTER_DESC1 m_DXGIAdapterDesc;
 };
 static_assert(offsetof(cdevice_native, m_pD3DDeviceContext) == 0x90);
+static_assert(offsetof(cdevice_native, m_context_desc) == 0x98);
+static_assert(offsetof(cdevice_native, m_pD3DQuery) == 0x118);
+static_assert(offsetof(cdevice_native, m_p_border_color) == 0x120);
 
 class cdevice : public cdevice_native
 {
@@ -288,6 +292,11 @@ struct alignas(16) cgs_cb
 	unsigned int m_create_flags;
 };
 
+// We can ask the DLL to create those so there's no need to worry about their structure
+// (for now?)
+struct alignas(8) cgs_vb {};
+struct cgs_ib {};
+
 struct cgs_cb_pool
 {
   cgs_cb_pool* mp_link = nullptr;
@@ -311,8 +320,8 @@ struct cgs_up_pool
 	unsigned int m_last_frame_counter_vb;
 	unsigned int m_last_frame_counter_ib;
 	cgs_up_pool* mp_link;
-	/*cgs_vb*/void *mp_vb; // We can ask the DLL to create those so there's no need to worry about their structure
-	/*cgs_ib*/void *mp_ib; // (for now?)
+	cgs_vb* mp_vb;
+	cgs_ib* mp_ib;
 	void *mp_push_polygon;
 	void *mp_push_line;
 };
@@ -367,6 +376,22 @@ static_assert(offsetof(cgs_device_context, mp_shader_uniform) == 56);
 
 namespace gs {
 
+enum vb_usage_t
+{
+	VB_USAGE_DEFAULT = 0x120,
+	VB_USAGE_IMMUTABLE = 0x101,
+	VB_USAGE_DYNAMIC = 0x10A,
+	VB_USAGE_STAGING = 0x3B,
+};
+
+enum ib_usage_t
+{
+	IB_USAGE_DEFAULT = 0x220,
+	IB_USAGE_IMMUTABLE = 0x201,
+	IB_USAGE_DYNAMIC = 0x20A,
+	IB_USAGE_STAGING = 0x3B,
+};
+
 struct export_context_t
 {
 	size_t size_of_struct;
@@ -385,6 +410,12 @@ struct context_t
 	cgs_device_context* p_device_context;
 	sbgl::cdevice sbgl_device;
 	std::byte gap2[32];
+	cgs_vb *p_vb_sphere[3];
+	cgs_vb *p_vb_capsule[3];
+	cgs_ib *p_ib_quad;
+	cgs_ib *p_ib_fan;
+	//cgs_ib *p_ib_rect; // YLAD only
+	std::byte gap3[96];
 	t_lockfree_stack<cgs_cb_pool> stack_cb_pool;
 	t_lockfree_stack<cgs_up_pool> stack_up_pool;
 	t_lockfree_stack<cgs_shader_uniform> stack_shader_uniform;
@@ -393,9 +424,16 @@ static_assert(offsetof(context_t, p_device_context) == 0xB0);
 static_assert(offsetof(context_t, sbgl_device) == 0xC0);
 static_assert(offsetof(context_t, sbgl_device.m_pD3DDeviceContext) == 0x150); // Redundant,but validates the assumption
 																			  // that m_pD3DDeviceContext
+static_assert(offsetof(context_t, p_ib_quad) == 0x1370);
+static_assert(offsetof(context_t, p_ib_fan) == 0x1378);
 static_assert(offsetof(context_t, stack_cb_pool) == 0x13E0);
 static_assert(offsetof(context_t, stack_up_pool) == 0x13E8);
 static_assert(offsetof(context_t, stack_shader_uniform) == 0x13F0);
+
+void primitive_initialize();
+
+extern cgs_vb* (*vb_create)(uint64_t fvf, unsigned int vertices, vb_usage_t usage, unsigned int flags, const void* p_initial_data, const char* sz_name);
+extern cgs_ib* (*ib_create)(unsigned int indices, ib_usage_t usage, unsigned int flags, const void* p_initial_data, const char* sz_name);
 
 extern context_t* sm_context;
 

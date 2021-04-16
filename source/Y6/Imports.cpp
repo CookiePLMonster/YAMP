@@ -17,6 +17,12 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::GS_CONTEXT_INSTANCE:
 		symbolAddr = 0x180AD3040;
 		break;
+	case Symbol::GS_CONTEXT_PTR:
+		symbolAddr = 0x180ACF888;
+		break;
+	case Symbol::D3DDEVICE:
+		symbolAddr = 0x180AD2DD8;
+		break;
 	case Symbol::SL_HANDLE_CREATE:
 		symbolAddr = 0x1800214B0;
 		break;
@@ -34,6 +40,12 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 		break;
 	case Symbol::DEVICE_CONTEXT_RESET_STATE_ALL:
 		symbolAddr = 0x180008A90;
+		break;
+	case Symbol::VB_CREATE:
+		symbolAddr = 0x18000D6D0;
+		break;
+	case Symbol::IB_CREATE:
+		symbolAddr = 0x18000EDE0;
 		break;
 	default: // Unreachable
 		symbolAddr = 0;

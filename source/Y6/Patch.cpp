@@ -55,7 +55,7 @@ void PatchSl(sl::context_t* context)
 }
 
 void PatchGs(gs::context_t* context, const RenderWindow& window)
-{	
+{
 	// Initialize cgs_device_context
 	cgs_device_context* device_context = new cgs_device_context{};
 
@@ -79,6 +79,8 @@ void PatchGs(gs::context_t* context, const RenderWindow& window)
 	export_context.sbgl_context.p_value[0] = window.GetD3D11Device();
 	export_context.sbgl_context.p_value[1] = static_cast<sbgl::cdevice_native*>(&context->sbgl_device);
 	export_context.sbgl_context.p_value[2] = &context->sbgl_device.m_swap_chain;
+
+	gs::primitive_initialize();
 }
 
 static void prj_trap(const char* format, ...)

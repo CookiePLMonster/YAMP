@@ -70,6 +70,25 @@ static void ImportFunctions(HMODULE dll)
 	Import(sl::archive_lock_wlock, Symbol::ARCHIVE_LOCK_WLOCK);
 	Import(sl::archive_lock_wunlock, Symbol::ARCHIVE_LOCK_WUNLOCK);
 	Import(cgs_device_context::reset_state_all_internal, Symbol::DEVICE_CONTEXT_RESET_STATE_ALL);
+	Import(gs::vb_create, Symbol::VB_CREATE);
+	Import(gs::ib_create, Symbol::IB_CREATE);
+}
+
+static void PrefillVariables(HMODULE dll, const RenderWindow& window)
+{
+	using namespace Imports;
+	auto Import = [dll](auto& var, auto symbol)
+	{
+		var = static_cast<std::decay_t<decltype(var)>>(GetImportedFunction(dll, symbol));
+	};
+
+	gs::context_t** ppContext;
+	Import(ppContext, Symbol::GS_CONTEXT_PTR);
+	*ppContext = gs::sm_context;
+
+	ID3D11Device** ppDevice;
+	Import(ppDevice, Symbol::D3DDEVICE);
+	*ppDevice = window.GetD3D11Device();
 }
 
 void Y6::VF5FS::Run(const RenderWindow& window)
@@ -86,6 +105,8 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Patch up structures and do post-DllMain work here
 	// Saves having to reimplement all the complex constructors and data types
 	ImportFunctions(gameDll.get());
+	PrefillVariables(gameDll.get(), window); // Pre-fill those variables gs/sl initialization relies on
+
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);
 

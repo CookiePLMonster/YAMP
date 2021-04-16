@@ -4,7 +4,53 @@
 
 namespace gs {
 
+cgs_vb* (*vb_create)(uint64_t fvf, unsigned int vertices, vb_usage_t usage, unsigned int flags, const void* p_initial_data, const char* sz_name);
+cgs_ib* (*ib_create)(unsigned int indices, ib_usage_t usage, unsigned int flags, const void* p_initial_data, const char* sz_name);
 context_t* sm_context;
+
+void primitive_initialize()
+{
+	context_t* context = sm_context;
+
+	for (size_t i = 0; i < 3; i++)
+	{
+		context->p_vb_sphere[i] = nullptr;
+		context->p_vb_capsule[i] = nullptr;
+	}
+
+	{
+		constexpr size_t NUM_PRIMITIVES = 192;
+		uint16_t verts[NUM_PRIMITIVES][6];
+		uint16_t primNum = 0;
+		for (auto& vert : verts)
+		{
+			const uint16_t startVertNum = 4 * primNum++;
+			size_t idx = 0;
+			vert[idx++] = startVertNum;
+			vert[idx++] = startVertNum + 1;
+			vert[idx++] = startVertNum + 2;
+			vert[idx++] = startVertNum;
+			vert[idx++] = startVertNum + 2;
+			vert[idx++] = startVertNum + 3;
+		}
+		context->p_ib_quad = ib_create(NUM_PRIMITIVES * 6, IB_USAGE_IMMUTABLE, 0, verts, nullptr);
+	}
+	{
+		constexpr size_t NUM_PRIMITIVES = 256;
+		uint16_t verts[NUM_PRIMITIVES][3];
+		uint16_t primNum = 0;
+		for (auto& vert : verts)
+		{
+			const uint16_t startVertexNum = primNum++;
+			size_t idx = 0;
+			vert[idx++] = startVertexNum + 2;
+			vert[idx++] = 0;
+			vert[idx++] = startVertexNum + 1;
+		}
+		// BUG: Original code creates a IB 2x bigger, but this seems like a bug
+		context->p_ib_fan = ib_create(NUM_PRIMITIVES * 3, IB_USAGE_IMMUTABLE, 0, verts, nullptr);
+	}
+}
 
 }
 
@@ -88,7 +134,7 @@ void ccontext_native::desc_st::reset(ID3D11RenderTargetView* pDepthStencilView, 
 	for (size_t i = 0; i < 8; i++)
 	{
 		m_ppRenderTargetView[i] = nullptr;
-		m_p_fast_clear_color[i] = {};
+		//m_p_fast_clear_color[i] = {}; // YLAD only
 	}
 	m_num_slots = 0;
 	m_width = width;
