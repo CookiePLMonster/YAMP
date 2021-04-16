@@ -22,7 +22,9 @@ enum class Symbol
 
 	DEVICE_CONTEXT_RESET_STATE_ALL,
 	VB_CREATE,
-	IB_CREATE
+	IB_CREATE,
+
+	TRAP_ALLOC_INSTANCE_TBL
 };
 
 void* GetImportedFunction(HMODULE lib, Symbol symbol);

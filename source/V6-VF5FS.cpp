@@ -91,6 +91,23 @@ static void PrefillVariables(HMODULE dll, const RenderWindow& window)
 	*ppDevice = window.GetD3D11Device();
 }
 
+static void InjectTraps(HMODULE dll)
+{
+#ifdef _DEBUG
+	std::forward_list<void*> traps;
+	using namespace Imports;
+	auto Import = [dll](auto& var, auto symbol)
+	{
+		var = static_cast<std::decay_t<decltype(var)>>(GetImportedFunction(dll, symbol));
+	};
+
+	void* ptr;
+	Import(ptr, Symbol::TRAP_ALLOC_INSTANCE_TBL); traps.push_front(ptr);
+
+	InjectTraps(traps);
+#endif
+}
+
 void Y6::VF5FS::Run(const RenderWindow& window)
 {
 	wil::unique_hmodule gameDll(LoadLibraryW(DLL_NAME));
@@ -107,11 +124,13 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	ImportFunctions(gameDll.get());
 	PrefillVariables(gameDll.get(), window); // Pre-fill those variables gs/sl initialization relies on
 
-	PatchSl(sl::sm_context);
-	PatchGs(gs::sm_context, window);
-
 	// Install hooks re-adding logging
 	ReinstateLogging(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::PRJ_TRAP));
+	// Install additional "assertions"
+	InjectTraps(gameDll.get());
+
+	PatchSl(sl::sm_context);
+	PatchGs(gs::sm_context, window);
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;

@@ -47,6 +47,11 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::IB_CREATE:
 		symbolAddr = 0x18000EDE0;
 		break;
+
+	// Debug only
+	case Symbol::TRAP_ALLOC_INSTANCE_TBL:
+		symbolAddr = 0x180010833;
+		break;
 	default: // Unreachable
 		symbolAddr = 0;
 		break;

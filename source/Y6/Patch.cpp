@@ -92,10 +92,21 @@ static void prj_trap(const char* format, ...)
 	va_end(vl);
 
 	OutputDebugStringA(buf);
+#ifdef _DEBUG
+	__debugbreak();
+#endif
 }
 
 void ReinstateLogging(void* logFunc)
 {
 	Trampoline* t = Trampoline::MakeTrampoline(logFunc);
 	Memory::VP::InjectHook(logFunc, t->Jump(&prj_trap), PATCH_JUMP);
+}
+
+void InjectTraps(const std::forward_list<void*>& addresses)
+{
+	for (void* ptr : addresses)
+	{
+		Memory::VP::Patch<uint8_t>(ptr, 0xCC);
+	}
 }
