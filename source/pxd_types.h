@@ -15,6 +15,21 @@ struct rwspinlock_t
 	volatile unsigned int m_lock_status = 0;
 };
 
+struct recursive_rwspinlock_t
+{
+	union lock_status_t
+	{
+		volatile unsigned int status;
+		struct
+		{
+			uint32_t ref_count : 16;
+			uint32_t thread_sid : 16;
+		} s;
+	};
+
+	volatile lock_status_t m_lock_status {};
+};
+
 namespace sl {
 
 struct alignas(16) mutex_t
@@ -223,6 +238,20 @@ private:
 };
 
 template<typename T>
+struct t_status_ptr
+{
+	union
+	{
+		struct
+		{
+			int64_t m_ptr : 48;
+			uint64_t m_status : 16;
+		} p;
+		uint64_t m_status_ptr;
+	} v;
+};
+
+template<typename T>
 struct t_lockfree_ptr
 {
 	struct counter_ptr_t
@@ -286,7 +315,7 @@ public:
 			exchanged.p.m_counter = desired.p.m_counter + 1;
 		}
 		while (result != nullptr);
-		return result;	
+		return result;
 	}
 
 private:
@@ -317,6 +346,13 @@ public:
 		std::fill_n(mpp_instance_tbl, m_instance_max, nullptr);
 	}
 
+	T* get(unsigned int id) const
+	{
+		assert(id >= 1);
+		const unsigned int index = id - 1;
+		return index < m_instance_max ? mpp_instance_tbl[index] : nullptr;
+	}
+
 private:
 	T** mpp_instance_tbl;
 	uint64_t* mp_free_tbl;
@@ -324,4 +360,26 @@ private:
 	unsigned int m_instance_max;
 	unsigned int m_free_top;
 	unsigned int m_free_tbl_size;
+};
+
+template<typename T>
+class t_avl_tree_node
+{
+
+private:
+	t_status_ptr<t_avl_tree_node<T> > mp_left;
+	t_status_ptr<t_avl_tree_node<T> > mp_right;
+};
+
+struct csl_hash
+{
+	union
+	{
+		struct
+		{
+			uint16_t m_hash_id;
+			char m_sz_hash_name[30];
+		} h;
+		uint64_t m_hash[4];
+	} hash {};
 };

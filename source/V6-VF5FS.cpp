@@ -191,5 +191,26 @@ void Y6::VF5FS::GameLoop(module_func_t func)
 	while (true)
 	{
 		if (func(sizeof(execute_info), &execute_info) != 0) break;
+
+		cgs_tex* display_tex = gs::sm_context->handle_tex.get(execute_info.output_texid);
+		if (display_tex == nullptr) break;
+		if (display_tex->m_type != 2) break;
+		cgs_rt* display_rt = display_tex->mp_rt;
+
+		// TODO: Beautify this
+		auto& swapChain = gs::sm_context->sbgl_device.m_swap_chain;
+		IDXGISwapChain* nativeSwapChain = swapChain.m_pDXGISwapChain;
+		ID3D11DeviceContext* context = gs::sm_context->p_device_context->mp_sbgl_context;
+
+		// TODO: This will need a proper Draw, for now CopyResource should work
+		wil::com_ptr<ID3D11Resource> destination;
+		HRESULT hr = nativeSwapChain->GetBuffer(0, IID_PPV_ARGS(destination.addressof()));
+		if (FAILED(hr)) break;
+
+		ID3D11Resource* source = display_rt->mp_sbgl_resource->m_pD3DResource;
+		context->CopyResource(destination.get(), source);
+
+		hr = nativeSwapChain->Present(1, 0);
+		if (FAILED(hr)) break;
 	}
 }
