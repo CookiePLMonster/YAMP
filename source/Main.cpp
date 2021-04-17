@@ -6,7 +6,9 @@
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
 {
-	RenderWindow window(hInstance, nShowCmd);
+	HMODULE dll = Y6::VF5FS::LoadDLL();
+
+	RenderWindow window(hInstance, dll, nShowCmd);
 
 	Y6::VF5FS::Run(window);
 

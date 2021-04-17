@@ -108,11 +108,17 @@ static void InjectTraps(HMODULE dll)
 #endif
 }
 
+static wil::unique_hmodule gameDll;
+HMODULE Y6::VF5FS::LoadDLL()
+{
+	// TODO: Clean up
+	gameDll.reset(LoadLibraryW(DLL_NAME));
+	THROW_LAST_ERROR_IF_NULL(gameDll);
+	return gameDll.get();
+}
+
 void Y6::VF5FS::Run(const RenderWindow& window)
 {
-	wil::unique_hmodule gameDll(LoadLibraryW(DLL_NAME));
-	THROW_LAST_ERROR_IF_NULL(gameDll);
-
 	const auto module_start = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_start"));
 	THROW_LAST_ERROR_IF_NULL(module_start);
 	const auto module_stop = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_stop"));

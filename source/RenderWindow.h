@@ -13,7 +13,7 @@
 class RenderWindow
 {
 public:
-	RenderWindow(HINSTANCE instance, int cmdShow);
+	RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdShow);
 	~RenderWindow();
 
 	ID3D11Device* GetD3D11Device() const { return m_device.get(); }

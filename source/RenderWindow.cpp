@@ -4,15 +4,16 @@
 
 #pragma comment(lib, "d3d11.lib")
 
-RenderWindow::RenderWindow(HINSTANCE instance, int cmdShow)
+RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdShow)
 {
 	wil::unique_event startupEvent(wil::EventOptions::None);
-	m_windowThread = std::thread([this, &startupEvent, instance, cmdShow] {
+	m_windowThread = std::thread([this, &startupEvent, instance, dllInstance, cmdShow] {
 		
 		WNDCLASSEX wndClass { sizeof(wndClass) };
 		wndClass.hInstance = instance;
 		wndClass.lpfnWndProc = DefWindowProc;
 		wndClass.lpszClassName = L"YAKUZA_VF5FS";
+		wndClass.hIcon = LoadIcon(dllInstance, MAKEINTRESOURCE(101));
 
 		const ATOM windowClass = RegisterClassEx(&wndClass);
 		THROW_LAST_ERROR_IF(windowClass == 0);
