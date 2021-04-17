@@ -296,6 +296,16 @@ struct alignas(16) cgs_cb
 // (for now?)
 struct alignas(8) cgs_vb {};
 struct cgs_ib {};
+struct cgs_fx {};
+struct cgs_tex {};
+struct cgs_mesh {};
+struct cgs_vs {};
+struct cgs_ps {};
+struct cgs_gs {};
+struct cgs_hs {};
+struct cgs_ds {};
+struct cgs_cs {};
+struct cgs_gts {};
 
 struct cgs_cb_pool
 {
@@ -419,6 +429,17 @@ struct context_t
 	t_lockfree_stack<cgs_cb_pool> stack_cb_pool;
 	t_lockfree_stack<cgs_up_pool> stack_up_pool;
 	t_lockfree_stack<cgs_shader_uniform> stack_shader_uniform;
+	std::byte gap4[808];
+	t_instance_tbl<cgs_mesh> handle_mesh;
+	t_instance_tbl<cgs_tex> handle_tex;
+	t_instance_tbl<cgs_vs> handle_vs;
+	t_instance_tbl<cgs_ps> handle_ps;
+	t_instance_tbl<cgs_gs> handle_gs;
+	t_instance_tbl<cgs_hs> handle_hs;
+	t_instance_tbl<cgs_ds> handle_ds;
+	t_instance_tbl<cgs_cs> handle_cs;
+	t_instance_tbl<cgs_gts> handle_gts;
+	t_instance_tbl<cgs_fx> handle_fx;
 };
 static_assert(offsetof(context_t, p_device_context) == 0xB0);
 static_assert(offsetof(context_t, sbgl_device) == 0xC0);
@@ -429,6 +450,8 @@ static_assert(offsetof(context_t, p_ib_fan) == 0x1378);
 static_assert(offsetof(context_t, stack_cb_pool) == 0x13E0);
 static_assert(offsetof(context_t, stack_up_pool) == 0x13E8);
 static_assert(offsetof(context_t, stack_shader_uniform) == 0x13F0);
+static_assert(offsetof(context_t, handle_tex) == 0x1740);
+static_assert(offsetof(context_t, handle_fx) == 0x1840);
 
 void primitive_initialize();
 

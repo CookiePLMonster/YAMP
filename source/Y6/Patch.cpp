@@ -73,6 +73,23 @@ void PatchGs(gs::context_t* context, const RenderWindow& window)
 	device_context->initialize(reinterpret_cast<sbgl::ccontext*>(context->sbgl_device.m_pD3DDeviceContext));
 	context->p_device_context = device_context;
 
+	constexpr unsigned int FX_MAX = 256;
+	constexpr unsigned int VS_MAX = 512;
+	constexpr unsigned int PS_MAX = 512;
+	constexpr unsigned int GS_MAX = 256;
+	constexpr unsigned int DS_MAX = 256;
+	constexpr unsigned int HS_MAX = 256;
+	constexpr unsigned int GTS_MAX = 256;
+	constexpr unsigned int TEX_MAX = 1024;
+	context->handle_tex.initialize(nullptr, TEX_MAX);
+	context->handle_vs.initialize(nullptr, VS_MAX);
+	context->handle_ps.initialize(nullptr, PS_MAX);
+	context->handle_gs.initialize(nullptr, GS_MAX);
+	context->handle_ds.initialize(nullptr, DS_MAX);
+	context->handle_hs.initialize(nullptr, HS_MAX);
+	context->handle_gts.initialize(nullptr, GTS_MAX);
+	context->handle_fx.initialize(nullptr, FX_MAX);
+
 	// Fill the export context
 	auto& export_context = context->export_context;
 	export_context.size_of_struct = sizeof(export_context);

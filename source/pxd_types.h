@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <algorithm>
 
 // Types that are (hopefully) identical across all games
 
@@ -290,4 +291,37 @@ public:
 
 private:
 	t_lockfree_ptr<T> m_top;
+};
+
+template<typename T>
+class t_instance_tbl
+{
+public:
+	void initialize(char* space, unsigned int size)
+	{
+		m_instance_max = size;
+		m_free_top = 0;
+		m_free_tbl_size = (size + 63) / 64;
+		if (space != nullptr)
+		{
+			m_status |= 1;
+			mpp_instance_tbl = reinterpret_cast<T**>(space);
+			mp_free_tbl = reinterpret_cast<uint64_t*>(space + sizeof(mpp_instance_tbl[0]) * size);
+		}
+		else
+		{
+			mpp_instance_tbl = new T*[size];
+			mp_free_tbl = new uint64_t[size];
+		}
+		std::fill_n(mp_free_tbl, m_free_tbl_size, uint64_t(-1));
+		std::fill_n(mpp_instance_tbl, m_instance_max, nullptr);
+	}
+
+private:
+	T** mpp_instance_tbl;
+	uint64_t* mp_free_tbl;
+	unsigned int m_status;
+	unsigned int m_instance_max;
+	unsigned int m_free_top;
+	unsigned int m_free_tbl_size;
 };
