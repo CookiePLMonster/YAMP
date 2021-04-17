@@ -60,9 +60,8 @@ void cgs_device_context::initialize(sbgl::ccontext* p_context)
 	{
 		mp_sbgl_context = p_context;
 
-		// Deliberately left as nullptr now, potentially unused (the DLL allocates its own pools)
-		mp_cb_pool = nullptr;
-		mp_up_pool = nullptr;
+		mp_cb_pool = gs::sm_context->stack_cb_pool.pop();
+		mp_up_pool = gs::sm_context->stack_up_pool.pop();
 		mp_shader_uniform = gs::sm_context->stack_shader_uniform.pop();
 		reset_state_all();
 
@@ -142,6 +141,27 @@ void ccontext_native::desc_st::reset(ID3D11RenderTargetView* pDepthStencilView, 
 	m_depth_clear_value = depth_clear_value;
 }
 
+}
+
+void cgs_up_pool::initialize(unsigned int vb_size, unsigned int ib_size, bool is_push_support)
+{
+	m_vb_size = (vb_size + 63) & ~63;
+	m_ib_size = (ib_size + 63) & ~63;
+
+	if (m_vb_size != 0)
+	{
+		mp_vb = gs::vb_create(0xE00003u, m_vb_size / 16, gs::VB_USAGE_DYNAMIC, 0, nullptr, nullptr);
+	}
+	if (m_ib_size != 0)
+	{
+		mp_ib = gs::ib_create(m_ib_size / 2, gs::IB_USAGE_DYNAMIC, 0, nullptr, nullptr);
+	}
+	if (is_push_support)
+	{
+		char* buf = static_cast<char*>(::operator new(2 * m_vb_size, std::align_val_t(16)));
+		mp_push_polygon = buf;
+		mp_push_line = buf+m_vb_size;
+	}
 }
 
 void cgs_shader_uniform::initialize()

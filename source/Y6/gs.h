@@ -311,29 +311,33 @@ struct cgs_cb_pool
 {
   cgs_cb_pool* mp_link = nullptr;
   unsigned int m_cb_num = 0;
-  cgs_cb *mp_small_tbl[96][32];
-  cgs_cb *mp_large_tbl[96][32];
-  cgs_cb *mp_huge_tbl[96][32];
+  cgs_cb *mp_small_tbl[96][32] {};
+  cgs_cb *mp_large_tbl[96][32] {};
+  cgs_cb *mp_huge_tbl[96][32] {};
 };
 
 struct cgs_up_pool
 {
-	unsigned int m_vb_size;
-	unsigned int m_ib_size;
-	unsigned int m_vb_ptr;
-	unsigned int m_ib_ptr;
-	unsigned int m_current_stride;
-	unsigned int m_current_vertex_count;
-	unsigned int m_current_vertex_offset;
-	unsigned int m_current_index_count;
-	unsigned int m_current_index_offset;
-	unsigned int m_last_frame_counter_vb;
-	unsigned int m_last_frame_counter_ib;
-	cgs_up_pool* mp_link;
-	cgs_vb* mp_vb;
-	cgs_ib* mp_ib;
-	void *mp_push_polygon;
-	void *mp_push_line;
+public:
+	void initialize(unsigned int vb_size, unsigned int ib_size, bool is_push_support);
+
+public: // TODO: Make private, mp_link requires public for now
+	unsigned int m_vb_size = 0;
+	unsigned int m_ib_size = 0;
+	unsigned int m_vb_ptr = 0;
+	unsigned int m_ib_ptr = 0;
+	unsigned int m_current_stride = 0;
+	unsigned int m_current_vertex_count = 0;
+	unsigned int m_current_vertex_offset = 0;
+	unsigned int m_current_index_count = 0;
+	unsigned int m_current_index_offset = 0;
+	unsigned int m_last_frame_counter_vb = 0;
+	unsigned int m_last_frame_counter_ib = 0;
+	cgs_up_pool* mp_link = nullptr;
+	cgs_vb* mp_vb = nullptr;
+	cgs_ib* mp_ib = nullptr;
+	void *mp_push_polygon = nullptr;
+	void *mp_push_line = nullptr;
 };
 static_assert(sizeof(cgs_up_pool) == 88);
 

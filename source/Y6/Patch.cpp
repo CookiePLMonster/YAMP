@@ -62,8 +62,17 @@ void PatchGs(gs::context_t* context, const RenderWindow& window)
 	context->sbgl_device.initialize(window);
 
 	static constexpr size_t NUM_CONTEXTES = 16; // TODO: Uneducated guess, real value comes from the init struct
-	for (size_t i = 0; i < 16; i++)
+	for (size_t i = 0; i < NUM_CONTEXTES; i++)
 	{
+		cgs_cb_pool* cbPool = new cgs_cb_pool;
+		context->stack_cb_pool.push(cbPool);
+
+		// TODO: Figure out proper sizes ASAP, now hardcoded for both which is terrible and probably wrong
+		constexpr unsigned int UP_VB_SIZE = 4096, UP_IB_SIZE = 4096;
+		cgs_up_pool* upPool = new cgs_up_pool;
+		upPool->initialize(UP_VB_SIZE, UP_IB_SIZE, true);
+		context->stack_up_pool.push(upPool);
+
 		cgs_shader_uniform* uniform = new cgs_shader_uniform;
 		uniform->initialize();
 
