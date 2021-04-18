@@ -51,9 +51,12 @@ struct alignas(16) vf5fs_execute_info_t
 	int status;
 	int result;
 	unsigned int output_texid;
-	std::byte gap1C[772];
+	std::byte gap[20];
+	csl_pad pad[2];
+	std::byte gap2[16];
 };
 static_assert(sizeof(vf5fs_execute_info_t) == 800);
+static_assert(offsetof(vf5fs_execute_info_t, pad) == 0x30);
 
 static void ImportFunctions(HMODULE dll)
 {
@@ -171,7 +174,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 		const icri* cri_ptr;
 		const char* root_path = ".";
 		module_func_t* module_main;
-		vf5fs_game_config_t config;
+		vf5fs_game_config_t config {};
 	} params;
 	static_assert(sizeof(params) == 64);
 
@@ -180,6 +183,11 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	params.ct_module = &ct_module;
 	params.cri_ptr = &criware_stub;
 	params.module_main = &module_main;
+
+	params.config.is_dural_unlocked = true;
+	params.config.is_triangle_start = true;
+	params.config.game_mode = 1;
+	params.config.lang = 1;
 
 	// Kick off the game
 	if (module_start(sizeof(params), &params) == 0)
@@ -193,6 +201,10 @@ void Y6::VF5FS::GameLoop(module_func_t func)
 	vf5fs_execute_info_t execute_info {};
 	execute_info.size_of_struct = sizeof(execute_info);
 	execute_info.p_device_context = gs::sm_context->p_device_context;
+
+	execute_info.pad[0].m_is_connected = true;
+
+	//std::fill(std::begin(execute_info.gap1C), std::end(execute_info.gap1C), std::byte(-1));
 
 	while (true)
 	{
@@ -218,5 +230,7 @@ void Y6::VF5FS::GameLoop(module_func_t func)
 
 		hr = nativeSwapChain->Present(1, 0);
 		if (FAILED(hr)) break;
+
+		gs::sm_context->frame_counter++;
 	}
 }

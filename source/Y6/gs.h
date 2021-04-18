@@ -682,7 +682,8 @@ struct context_t
 	uint32_t size_of_struct; // Should be 8128 when complete
 	uint32_t sbgl_initialize_flags;
 	export_context_t export_context;
-	std::byte gap[80];
+	unsigned int frame_counter;
+	std::byte gap[76];
 	cgs_device_context* p_device_context;
 	sbgl::cdevice sbgl_device;
 	std::byte gap2[32];
@@ -707,6 +708,7 @@ struct context_t
 	t_instance_tbl<cgs_gts> handle_gts;
 	t_instance_tbl<cgs_fx> handle_fx;
 };
+static_assert(offsetof(context_t, frame_counter) == 0x60);
 static_assert(offsetof(context_t, p_device_context) == 0xB0);
 static_assert(offsetof(context_t, sbgl_device) == 0xC0);
 static_assert(offsetof(context_t, sbgl_device.m_pD3DDeviceContext) == 0x150); // Redundant,but validates the assumption

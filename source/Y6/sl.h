@@ -16,6 +16,27 @@ class csl_file_access_archive;
 // sl definitions for Yakuza 6
 class csl_file_async_request;
 
+struct csl_pad
+{
+	unsigned int m_now;
+	unsigned int m_push;
+	unsigned int m_pull;
+	unsigned int m_prev;
+	float m_x1;
+	float m_y1;
+	float m_x2;
+	float m_y2;
+	int m_button_frame[32];
+	char m_buttons[32];
+	char m_prev_buttons[32];
+	unsigned int m_port;
+	int m_user_id;
+	bool m_is_connected;
+	bool m_is_remote;
+	std::byte gap[132];
+};
+static_assert(sizeof(csl_pad) == 0x170);
+
 namespace sl {
 
 // Imported function
