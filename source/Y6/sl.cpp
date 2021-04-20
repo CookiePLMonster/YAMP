@@ -1,6 +1,10 @@
 #include "sl.h"
 
+#include <Xinput.h>
+
 #include <algorithm>
+
+#pragma comment(lib, "xinput.lib")
 
 namespace sl {
 
@@ -323,4 +327,111 @@ void mutex_t::unlock()
     LeaveCriticalSection(&m_cs);
 }
 
+}
+
+namespace
+{
+    bool _set_state_xi(unsigned int id, unsigned int *m_now, float *m_x1, float *m_y1, uint8_t* m_buttons)
+    {
+        XINPUT_STATE state;
+        XInputGetState(id, &state);
+
+        /*#define XINPUT_GAMEPAD_DPAD_UP          0x0001
+#define XINPUT_GAMEPAD_DPAD_DOWN        0x0002
+#define XINPUT_GAMEPAD_DPAD_LEFT        0x0004
+#define XINPUT_GAMEPAD_DPAD_RIGHT       0x0008
+#define XINPUT_GAMEPAD_START            0x0010
+#define XINPUT_GAMEPAD_BACK             0x0020
+#define XINPUT_GAMEPAD_LEFT_THUMB       0x0040
+#define XINPUT_GAMEPAD_RIGHT_THUMB      0x0080
+#define XINPUT_GAMEPAD_LEFT_SHOULDER    0x0100
+#define XINPUT_GAMEPAD_RIGHT_SHOULDER   0x0200
+#define XINPUT_GAMEPAD_A                0x1000
+#define XINPUT_GAMEPAD_B                0x2000
+#define XINPUT_GAMEPAD_X                0x4000
+#define XINPUT_GAMEPAD_Y                0x8000*/
+
+        // TODO: Triggers and sticks
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_A)
+        {
+            *m_now |= (1 << sl::BUTTON_A);
+            m_buttons[sl::BUTTON_A] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_B)
+        {
+            *m_now |= (1 << sl::BUTTON_B);
+            m_buttons[sl::BUTTON_B] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_X)
+        {
+            *m_now |= (1 << sl::BUTTON_X);
+            m_buttons[sl::BUTTON_X] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_Y)
+        {
+            *m_now |= (1 << sl::BUTTON_Y);
+            m_buttons[sl::BUTTON_Y] = 0xFF;
+        }
+
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_START)
+        {
+            *m_now |= (1 << sl::BUTTON_START);
+            m_buttons[sl::BUTTON_START] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_BACK)
+        {
+            *m_now |= (1 << sl::BUTTON_BACK);
+            m_buttons[sl::BUTTON_BACK] = 0xFF;
+        }
+
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP)
+        {
+            *m_now |= (1 << sl::BUTTON_UP);
+            m_buttons[sl::BUTTON_UP] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN)
+        {
+            *m_now |= (1 << sl::BUTTON_DOWN);
+            m_buttons[sl::BUTTON_DOWN] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT)
+        {
+            *m_now |= (1 << sl::BUTTON_LEFT);
+            m_buttons[sl::BUTTON_LEFT] = 0xFF;
+        }
+        if (state.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT)
+        {
+            *m_now |= (1 << sl::BUTTON_RIGHT);
+            m_buttons[sl::BUTTON_RIGHT] = 0xFF;
+        }
+
+
+	/*BUTTON_A = 0x0,
+	BUTTON_B = 0x1,
+	BUTTON_X = 0x2,
+	BUTTON_Y = 0x3,
+	BUTTON_LB = 0x4,
+	BUTTON_RB = 0x5,
+	BUTTON_LT = 0x6,
+	BUTTON_RT = 0x7,
+	BUTTON_START = 0x8,
+	BUTTON_BACK = 0x9,
+	BUTTON_L_THUMB = 0xA,
+	BUTTON_R_THUMB = 0xB,
+	BUTTON_UP = 0xC,
+	BUTTON_DOWN = 0xD,
+	BUTTON_LEFT = 0xE,
+	BUTTON_RIGHT = 0xF,*/
+
+        return true;
+    }
+};
+
+void csl_pad::set_state()
+{
+    m_prev = std::exchange(m_now, 0);
+    _set_state_xi(0, &m_now, &m_x1, &m_y1, m_buttons);
+
+    m_push = ~m_prev & m_now;
+    m_pull = m_prev & ~m_now;
 }

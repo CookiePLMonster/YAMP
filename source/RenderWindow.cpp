@@ -14,6 +14,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		wndClass.lpfnWndProc = DefWindowProc;
 		wndClass.lpszClassName = L"YAKUZA_VF5FS";
 		wndClass.hIcon = LoadIcon(dllInstance, MAKEINTRESOURCE(101));
+		wndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
 
 		const ATOM windowClass = RegisterClassEx(&wndClass);
 		THROW_LAST_ERROR_IF(windowClass == 0);

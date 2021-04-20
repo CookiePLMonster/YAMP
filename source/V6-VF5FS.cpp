@@ -202,12 +202,16 @@ void Y6::VF5FS::GameLoop(module_func_t func)
 	execute_info.size_of_struct = sizeof(execute_info);
 	execute_info.p_device_context = gs::sm_context->p_device_context;
 
-	execute_info.pad[0].m_is_connected = true;
+	execute_info.pad[0] = {};
 
 	//std::fill(std::begin(execute_info.gap1C), std::end(execute_info.gap1C), std::byte(-1));
 
 	while (true)
 	{
+		// TODO: Beautify
+		execute_info.pad[0].set_state();
+		execute_info.status |= 2;
+
 		if (func(sizeof(execute_info), &execute_info) != 0) break;
 
 		cgs_tex* display_tex = gs::sm_context->handle_tex.get(execute_info.output_texid);

@@ -18,6 +18,9 @@ class csl_file_async_request;
 
 struct csl_pad
 {
+public:
+	void set_state();
+
 	unsigned int m_now;
 	unsigned int m_push;
 	unsigned int m_pull;
@@ -27,8 +30,8 @@ struct csl_pad
 	float m_x2;
 	float m_y2;
 	int m_button_frame[32];
-	char m_buttons[32];
-	char m_prev_buttons[32];
+	uint8_t m_buttons[32];
+	uint8_t m_prev_buttons[32];
 	unsigned int m_port;
 	int m_user_id;
 	bool m_is_connected;
@@ -38,6 +41,45 @@ struct csl_pad
 static_assert(sizeof(csl_pad) == 0x170);
 
 namespace sl {
+
+enum BUTTON
+{
+	BUTTON_A = 0x0,
+	BUTTON_B = 0x1,
+	BUTTON_X = 0x2,
+	BUTTON_Y = 0x3,
+	BUTTON_LB = 0x4,
+	BUTTON_RB = 0x5,
+	BUTTON_LT = 0x6,
+	BUTTON_RT = 0x7,
+	BUTTON_START = 0x8,
+	BUTTON_BACK = 0x9,
+	BUTTON_L_THUMB = 0xA,
+	BUTTON_R_THUMB = 0xB,
+	BUTTON_UP = 0xC,
+	BUTTON_DOWN = 0xD,
+	BUTTON_LEFT = 0xE,
+	BUTTON_RIGHT = 0xF,
+	BUTTON_L_UP = 0x10,
+	BUTTON_L_DOWN = 0x11,
+	BUTTON_L_LEFT = 0x12,
+	BUTTON_L_RIGHT = 0x13,
+	BUTTON_R_UP = 0x14,
+	BUTTON_R_DOWN = 0x15,
+	BUTTON_R_LEFT = 0x16,
+	BUTTON_R_RIGHT = 0x17,
+	BUTTON_ALL_UP = 0x18,
+	BUTTON_ALL_DOWN = 0x19,
+	BUTTON_ALL_LEFT = 0x1A,
+	BUTTON_ALL_RIGHT = 0x1B,
+	BUTTON_DA_UP = 0x1C,
+	BUTTON_DA_DOWN = 0x1D,
+	BUTTON_DA_LEFT = 0x1E,
+	BUTTON_DA_RIGHT = 0x1F,
+	BUTTON_MAX = 0x20,
+	BUTTON_UNKNOWN = 0xFF,
+	BUTTON_FORCE_32BIT = 0x7FFFFFFF,
+};
 
 // Imported function
 extern handle_t* (*handle_create_internal)(handle_t* obj, void* ptr, uint32_t type);
