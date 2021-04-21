@@ -46,16 +46,32 @@ static_assert(sizeof(vf5fs_game_config_t) == 8);
 
 struct alignas(16) vf5fs_execute_info_t
 {
+	enum assign_t
+	{
+		assign_invalid = 0x0,
+		assign_none = 0x1,
+		assign_p = 0x2,
+		assign_k = 0x3,
+		assign_g = 0x4,
+		assign_pg = 0x5,
+		assign_pkg = 0x6,
+		assign_pk = 0x7,
+		assign_kg = 0x8,
+	};
+
+
 	size_t size_of_struct;
 	cgs_device_context* p_device_context;
 	int status;
 	int result;
 	unsigned int output_texid;
-	std::byte gap[20];
+	std::byte gap[4];
+	uint8_t assign[2][8];
 	csl_pad pad[2];
 	std::byte gap2[16];
 };
 static_assert(sizeof(vf5fs_execute_info_t) == 800);
+static_assert(offsetof(vf5fs_execute_info_t, assign) == 0x20);
 static_assert(offsetof(vf5fs_execute_info_t, pad) == 0x30);
 
 static void ImportFunctions(HMODULE dll)
@@ -184,10 +200,14 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	params.cri_ptr = &criware_stub;
 	params.module_main = &module_main;
 
-	params.config.is_dural_unlocked = true;
-	params.config.is_triangle_start = true;
-	params.config.game_mode = 1;
+	params.config.is_dural_unlocked = false;
+	params.config.is_triangle_start = false;
+	params.config.game_mode = 0;
 	params.config.lang = 1;
+	params.config.diff = 1;
+	params.config.energy = 200;
+	params.config.round = 2;
+	params.config.time = 60;
 
 	// Kick off the game
 	if (module_start(sizeof(params), &params) == 0)
@@ -202,7 +222,22 @@ void Y6::VF5FS::GameLoop(module_func_t func)
 	execute_info.size_of_struct = sizeof(execute_info);
 	execute_info.p_device_context = gs::sm_context->p_device_context;
 
+	// TODO: This is needed, figure out what fields exactly cause it
 	execute_info.pad[0] = {};
+
+	// TODO: Set up mappings better
+	{
+		size_t i = 0;
+		auto& mappings = execute_info.assign[0];
+		mappings[i++] = vf5fs_execute_info_t::assign_p;
+		mappings[i++] = vf5fs_execute_info_t::assign_k;
+		mappings[i++] = vf5fs_execute_info_t::assign_g;
+		mappings[i++] = vf5fs_execute_info_t::assign_p;
+		mappings[i++] = vf5fs_execute_info_t::assign_pg;
+		mappings[i++] = vf5fs_execute_info_t::assign_pkg;
+		mappings[i++] = vf5fs_execute_info_t::assign_pk;
+		mappings[i++] = vf5fs_execute_info_t::assign_kg;
+	}
 
 	//std::fill(std::begin(execute_info.gap1C), std::end(execute_info.gap1C), std::byte(-1));
 
