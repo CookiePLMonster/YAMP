@@ -76,6 +76,10 @@ void cdevice::initialize(const RenderWindow& renderWindow)
 	m_swap_chain.initialize(renderWindow);
 	m_pD3DDeviceContext = renderWindow.GetD3D11DeviceContext();
 
+	std::fill(std::begin(m_p_border_color), std::end(m_p_border_color), _mm_set1_ps(std::numeric_limits<float>::quiet_NaN()));
+	m_p_border_color[0] = _mm_setzero_ps();
+	m_p_border_color[1] = _mm_set_ps(0.0f, 0.0f, 0.0f, 1.0f);
+	m_p_border_color[2] = _mm_set1_ps(1.0f);
 
 	// TODO: YLAD presents an empty frame here... Yakuza 6 doesn't seem to
 	// The game sets private data, then renders a frame, then resets private data
