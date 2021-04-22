@@ -4,6 +4,19 @@
 
 #pragma comment(lib, "d3d11.lib")
 
+static LRESULT WINAPI WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	switch (Msg)
+	{
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	default:
+		break;
+	}
+	return DefWindowProc(hWnd, Msg, wParam, lParam);
+}
+
 RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdShow)
 {
 	wil::unique_event startupEvent(wil::EventOptions::None);
@@ -11,7 +24,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		
 		WNDCLASSEX wndClass { sizeof(wndClass) };
 		wndClass.hInstance = instance;
-		wndClass.lpfnWndProc = DefWindowProc;
+		wndClass.lpfnWndProc = WindowProc;
 		wndClass.lpszClassName = L"YAKUZA_VF5FS";
 		wndClass.hIcon = LoadIcon(dllInstance, MAKEINTRESOURCE(101));
 		wndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
@@ -43,7 +56,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		swapChainDesc.Windowed = TRUE;
 
 #ifdef _DEBUG
-		UINT Flags = D3D11_CREATE_DEVICE_DEBUG;
+		UINT Flags = 0;//D3D11_CREATE_DEVICE_DEBUG;
 #else
 		UINT Flags = 0;
 #endif
@@ -64,7 +77,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		BOOL ret;
 		MSG msg;
 		while( (ret = GetMessage(&msg, NULL, 0, 0)) != 0)
-		{ 
+		{
 			if (ret == -1)
 			{
 				// handle the error and possibly exit
@@ -74,8 +87,9 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 				TranslateMessage(&msg); 
 				DispatchMessage(&msg); 
 			}
-		} 
+		}
 
+		m_shuttingDownWindow.store(true, std::memory_order_relaxed);
 
 		// TODO: Pass the exit code back to WinMain via RenderWindow
 		
@@ -85,4 +99,6 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 
 RenderWindow::~RenderWindow()
 {
+	PostMessage(m_window.get(), WM_CLOSE, 0, 0);
+	m_windowThread.join();
 }

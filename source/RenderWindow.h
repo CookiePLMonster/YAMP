@@ -24,7 +24,10 @@ public:
 	uint32_t GetWidth() const { return 1280; }
 	uint32_t GetHeight() const { return 720; }
 
+	bool IsShuttingDown() const { return m_shuttingDownWindow.load(std::memory_order_relaxed); }
+
 private:
+	std::atomic_bool m_shuttingDownWindow { false };
 	std::thread m_windowThread;
 	wil::unique_hwnd m_window;
 

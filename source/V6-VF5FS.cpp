@@ -212,11 +212,16 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Kick off the game
 	if (module_start(sizeof(params), &params) == 0)
 	{
-		GameLoop(module_main);
+		while (!window.IsShuttingDown())
+		{
+			if (!GameLoop(module_main)) break;
+		}
+
+		// TODO: module_stop
 	}
 }
 
-void Y6::VF5FS::GameLoop(module_func_t func)
+bool Y6::VF5FS::GameLoop(module_func_t func)
 {
 	vf5fs_execute_info_t execute_info {};
 	execute_info.size_of_struct = sizeof(execute_info);
@@ -239,37 +244,33 @@ void Y6::VF5FS::GameLoop(module_func_t func)
 		mappings[i++] = vf5fs_execute_info_t::assign_kg;
 	}
 
-	//std::fill(std::begin(execute_info.gap1C), std::end(execute_info.gap1C), std::byte(-1));
+	// TODO: Beautify
+	execute_info.pad[0].set_state();
+	execute_info.status |= 2;
 
-	while (true)
-	{
-		// TODO: Beautify
-		execute_info.pad[0].set_state();
-		execute_info.status |= 2;
+	if (func(sizeof(execute_info), &execute_info) != 0) return false;
 
-		if (func(sizeof(execute_info), &execute_info) != 0) break;
+	cgs_tex* display_tex = gs::sm_context->handle_tex.get(execute_info.output_texid);
+	if (display_tex == nullptr) return false;
+	if (display_tex->m_type != 2) return false;
+	cgs_rt* display_rt = display_tex->mp_rt;
 
-		cgs_tex* display_tex = gs::sm_context->handle_tex.get(execute_info.output_texid);
-		if (display_tex == nullptr) break;
-		if (display_tex->m_type != 2) break;
-		cgs_rt* display_rt = display_tex->mp_rt;
+	// TODO: Beautify this
+	auto& swapChain = gs::sm_context->sbgl_device.m_swap_chain;
+	IDXGISwapChain* nativeSwapChain = swapChain.m_pDXGISwapChain;
+	ID3D11DeviceContext* context = gs::sm_context->p_device_context->mp_sbgl_context;
 
-		// TODO: Beautify this
-		auto& swapChain = gs::sm_context->sbgl_device.m_swap_chain;
-		IDXGISwapChain* nativeSwapChain = swapChain.m_pDXGISwapChain;
-		ID3D11DeviceContext* context = gs::sm_context->p_device_context->mp_sbgl_context;
+	// TODO: This will need a proper Draw, for now CopyResource should work
+	wil::com_ptr<ID3D11Resource> destination;
+	HRESULT hr = nativeSwapChain->GetBuffer(0, IID_PPV_ARGS(destination.addressof()));
+	if (FAILED(hr)) return false;
 
-		// TODO: This will need a proper Draw, for now CopyResource should work
-		wil::com_ptr<ID3D11Resource> destination;
-		HRESULT hr = nativeSwapChain->GetBuffer(0, IID_PPV_ARGS(destination.addressof()));
-		if (FAILED(hr)) break;
+	ID3D11Resource* source = display_rt->mp_sbgl_resource->m_pD3DResource;
+	context->CopyResource(destination.get(), source);
 
-		ID3D11Resource* source = display_rt->mp_sbgl_resource->m_pD3DResource;
-		context->CopyResource(destination.get(), source);
+	hr = nativeSwapChain->Present(1, 0);
+	if (FAILED(hr)) return false;
 
-		hr = nativeSwapChain->Present(1, 0);
-		if (FAILED(hr)) break;
-
-		gs::sm_context->frame_counter++;
-	}
+	gs::sm_context->frame_counter++;
+	return true;
 }

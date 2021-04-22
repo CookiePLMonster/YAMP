@@ -10,6 +10,6 @@ namespace Y6
 	{
 		HMODULE LoadDLL();
 		void Run(const RenderWindow& window);
-		void GameLoop(module_func_t func);
+		bool GameLoop(module_func_t func);
 	}
 }
