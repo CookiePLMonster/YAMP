@@ -6,15 +6,15 @@ class CriStub final : public icri
 {
 public:
 	virtual CriAtomExPlayerTag* criAtomExPlayer_Create(CriAtomExPlayerConfigTag*, void*, int) override;
-	virtual void gap1() override;
-	virtual void gap2() override;
-	virtual void gap3() override;
-	virtual void gap4() override;
-	virtual void gap5() override;
-	virtual void gap6() override;
-	virtual void gap7() override;
-	virtual void gap8() override;
-	virtual void gap9() override;
+	virtual void criAtomExPlayer_Destroy(CriAtomExPlayerTag* player) override;
+	virtual CriAtomExPlayerStatusTag criAtomExPlayer_GetStatus(CriAtomExPlayerTag* player) override;
+	virtual struct CriAtomExAcbTag* criAtomExAcb_LoadAcbData(void* acb_data, int acb_data_size, CriFsBinderHnObjTag* awb_binder, const char* awb_path, void* work, int work_size) override;
+	virtual int criAtomExAcb_CalculateWorkSizeForLoadAcbData(void* acb_data, int acb_data_size, CriFsBinderHnObjTag* awb_binder, const char* awb_path) override;
+	virtual void criAtomExAcb_Release(CriAtomExAcbTag* acb_hn) override;
+	virtual void criAtomExPlayer_AttachAisac(CriAtomExPlayerTag* player, const char* global_aisac_name) override;
+	virtual void criAtomExPlayer_DetachAisac(CriAtomExPlayerTag* player, const char* global_aisac_name) override;
+	virtual void criAtomExPlayer_SetCueName(CriAtomExPlayerTag* player, CriAtomExAcbTag* acb_hn, const char* cue_name) override;
+	virtual void criAtomExPlayer_SetVolume(CriAtomExPlayerTag* player, float volume) override;
 	virtual int criAtomExPlayer_CalculateWorkSize(CriAtomExPlayerConfigTag*) override;
 	virtual unsigned int criAtomExPlayer_Start(CriAtomExPlayerTag*) override;
 	virtual void criAtomExPlayer_Stop(CriAtomExPlayerTag*) override;

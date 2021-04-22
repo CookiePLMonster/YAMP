@@ -270,20 +270,30 @@ struct CriAtomExWaveformInfoTag
   unsigned int reserved[1];
 };
 
+enum CriAtomExPlayerStatusTag
+{
+  CRIATOMEXPLAYER_STATUS_STOP = 0x0,
+  CRIATOMEXPLAYER_STATUS_PREP = 0x1,
+  CRIATOMEXPLAYER_STATUS_PLAYING = 0x2,
+  CRIATOMEXPLAYER_STATUS_PLAYEND = 0x3,
+  CRIATOMEXPLAYER_STATUS_ERROR = 0x4,
+  CRIATOMEXPLAYER_STATUS_ENUM_SIZE_IS_4BYTES = 0x7FFFFFFF,
+};
+
+
 class __declspec(novtable) icri
 {
 public:
 	virtual struct CriAtomExPlayerTag *criAtomExPlayer_Create(CriAtomExPlayerConfigTag *, void *, int) = 0;
-	// These are private or never used, as IDA defined them as a "gap"
-	virtual void gap1() = 0;
-	virtual void gap2() = 0;
-	virtual void gap3() = 0;
-	virtual void gap4() = 0;
-	virtual void gap5() = 0;
-	virtual void gap6() = 0;
-	virtual void gap7() = 0;
-	virtual void gap8() = 0;
-	virtual void gap9() = 0;
+	virtual void criAtomExPlayer_Destroy(struct CriAtomExPlayerTag *player) = 0;
+	virtual CriAtomExPlayerStatusTag criAtomExPlayer_GetStatus(struct CriAtomExPlayerTag *player) = 0;
+	virtual struct CriAtomExAcbTag* criAtomExAcb_LoadAcbData(void *acb_data, int acb_data_size, struct CriFsBinderHnObjTag *awb_binder, const char *awb_path, void *work, int work_size) = 0;
+	virtual int criAtomExAcb_CalculateWorkSizeForLoadAcbData(void *acb_data, int acb_data_size, struct CriFsBinderHnObjTag *awb_binder, const char *awb_path) = 0;
+	virtual void criAtomExAcb_Release(struct CriAtomExAcbTag *acb_hn) = 0;
+	virtual void criAtomExPlayer_AttachAisac(struct CriAtomExPlayerTag *player, const char *global_aisac_name) = 0;
+	virtual void criAtomExPlayer_DetachAisac(struct CriAtomExPlayerTag *player, const char *global_aisac_name) = 0;
+	virtual void criAtomExPlayer_SetCueName(struct CriAtomExPlayerTag *player, struct CriAtomExAcbTag *acb_hn, const char *cue_name) = 0;
+	virtual void criAtomExPlayer_SetVolume(struct CriAtomExPlayerTag *player, float volume) = 0;
 	virtual int criAtomExPlayer_CalculateWorkSize(CriAtomExPlayerConfigTag *) = 0;
 	virtual unsigned int criAtomExPlayer_Start(struct CriAtomExPlayerTag *) = 0;
 	virtual void criAtomExPlayer_Stop(struct CriAtomExPlayerTag *) = 0;
