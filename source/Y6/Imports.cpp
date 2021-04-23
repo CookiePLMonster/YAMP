@@ -1,13 +1,13 @@
 #include "Imports.h"
+#include <cassert>
 
 // TODO: Mutate this class depending on the DLL version! Right now it hardcodes day 1 symbols
 namespace Imports {
 
 static constexpr uintptr_t BASE_ADDRESS = 0x180000000; // Base address of the Y6 DLL
 
-void* GetImportedFunction(HMODULE lib, Symbol symbol)
+void* GetImportedFunction(void* lib, Symbol symbol)
 {
-	const uintptr_t libAddr = reinterpret_cast<uintptr_t>(lib);
 	uintptr_t symbolAddr;
 	switch (symbol)
 	{
@@ -52,11 +52,34 @@ void* GetImportedFunction(HMODULE lib, Symbol symbol)
 	case Symbol::TRAP_ALLOC_INSTANCE_TBL:
 		symbolAddr = 0x180010833;
 		break;
-	default: // Unreachable
-		symbolAddr = 0;
+	default:
+		assert(!"Unreachable!");
 		break;
 	}
+	const uintptr_t libAddr = reinterpret_cast<uintptr_t>(lib);
 	return reinterpret_cast<void*>(libAddr + (symbolAddr - BASE_ADDRESS));
+}
+
+std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
+{
+	std::vector<void*> result;
+	switch (symbol)
+	{
+	case Symbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH:
+		result = { (void*)0x1800F0345, (void*)0x1801AF21A, (void*)0x1801AF2CF, (void*)0x1801AF61C, (void*)0x1801B6BE6, (void*)0x1801B6E8C, (void*)0x1801E639E, (void*)0x18020B32E };
+		break;
+	default:
+		assert(!"Unreachable!");
+		break;
+	}
+
+	const uintptr_t libAddr = reinterpret_cast<uintptr_t>(lib);
+	for (auto& symbolAddr : result)
+	{
+		symbolAddr = reinterpret_cast<void*>(libAddr + (reinterpret_cast<uintptr_t>(symbolAddr) - BASE_ADDRESS));
+	}
+
+	return result;
 }
 
 }

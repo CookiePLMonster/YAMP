@@ -8,6 +8,9 @@
 #include "../Utils/MemoryMgr.h"
 #include "../Utils/Trampoline.h"
 
+#include "Imports.h"
+#include "sys_util.h"
+
 void PatchSl(sl::context_t* context)
 {
 	// Populate handle_free_queue
@@ -134,5 +137,16 @@ void InjectTraps(const std::forward_list<void*>& addresses)
 	for (void* ptr : addresses)
 	{
 		Memory::VP::Patch<uint8_t>(ptr, 0xCC);
+	}
+}
+
+void Patch_SysUtil(void* dll)
+{
+	Trampoline* hop = Trampoline::MakeTrampoline(dll);
+	void* sys_util_enable_storage = hop->Jump(&sys_util_check_enable_storage);
+
+	for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH))
+	{
+		Memory::VP::InjectHook(addr, sys_util_enable_storage);
 	}
 }

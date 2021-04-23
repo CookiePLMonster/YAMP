@@ -3,6 +3,8 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 
+#include <vector>
+
 // "Imported" variables and functions from the DLL
 namespace Imports {
 
@@ -24,9 +26,14 @@ enum class Symbol
 	VB_CREATE,
 	IB_CREATE,
 
-	TRAP_ALLOC_INSTANCE_TBL
+	TRAP_ALLOC_INSTANCE_TBL,
+
+	// Lists
+	SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH,
+
 };
 
-void* GetImportedFunction(HMODULE lib, Symbol symbol);
+void* GetImportedFunction(void* lib, Symbol symbol);
+std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol);
 
 }

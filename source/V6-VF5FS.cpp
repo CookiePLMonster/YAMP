@@ -154,6 +154,9 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Install additional "assertions"
 	InjectTraps(gameDll.get());
 
+	// Restore saving
+	Patch_SysUtil(gameDll.get());
+
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);
 
