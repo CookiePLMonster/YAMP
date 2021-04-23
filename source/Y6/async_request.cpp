@@ -45,12 +45,6 @@ uint32_t csl_file_async_request::thread_routine()
 		else
 		{
 			sl::semaphore_internal_t* sema = sl::semaphore_handle_instance(m_request);
-
-			// TODO: Debug
-			LONG semaCheck = 0;
-			ReleaseSemaphore(reinterpret_cast<HANDLE>(sema->h_semaphore), 1, &semaCheck);
-			WaitForSingleObject(reinterpret_cast<HANDLE>(sema->h_semaphore), INFINITE);
-
 			WaitForSingleObject(reinterpret_cast<HANDLE>(sema->h_semaphore), INFINITE);
 		}
 
