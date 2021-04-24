@@ -173,6 +173,11 @@ static void assign_helper_enable_shared_from_this(...)
 {
 }
 
+static float get_frame_speed_pause_stub()
+{
+	return 1.0f;
+}
+
 void Patch_Misc(void* dll)
 {
 	// TODO: Unprotect before patching and lose the ::VP namespace
@@ -180,9 +185,19 @@ void Patch_Misc(void* dll)
 	// prj::shared_ptr_internal::assign_helper_enable_shared_from_this folds with prj_trap, causing a false-positive log and eventually crashing
 	{
 		void* assign_helper = hop->Jump(&assign_helper_enable_shared_from_this);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS))
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS_PATCH))
 		{
 			Memory::VP::InjectHook(addr, assign_helper);
+		}
+	}
+
+	// Fix pause countdown not counting down
+	// In Y6 this code uses frame time, in YLAD it just uses count-- - a possible failed attempt at making the code support high framerates?
+	{
+		void* get_frame_speed_stub = hop->Jump(&get_frame_speed_pause_stub);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::TASK_PAUSE_CTRL_COUNTDOWN_PATCH))
+		{
+			Memory::VP::InjectHook(addr, get_frame_speed_stub);
 		}
 	}
 }

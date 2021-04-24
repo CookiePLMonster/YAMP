@@ -86,8 +86,11 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 	case Symbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH:
 		result = { (void*)0x1801B6EE6 };
 		break;
-	case Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS:
+	case Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS_PATCH:
 		result = { (void*)0x1801D46DC };
+		break;
+	case Symbol::TASK_PAUSE_CTRL_COUNTDOWN_PATCH:
+		result = { (void*)0x1801E68FA, (void*)0x1801E694A };
 		break;
 	default:
 		assert(!"Unreachable!");
