@@ -10,6 +10,7 @@
 #include "Y6/gs.h"
 #include "Y6/Imports.h"
 #include "Y6/Patch.h"
+#include "Y6/sys_util.h"
 
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
@@ -84,6 +85,10 @@ static void ImportFunctions(HMODULE dll)
 
 	Import(sl::sm_context, Symbol::SL_CONTEXT_INSTANCE);
 	Import(gs::sm_context, Symbol::GS_CONTEXT_INSTANCE);
+	Import(sl::file_create_internal, Symbol::SL_FILE_CREATE);
+	Import(sl::file_open_internal, Symbol::SL_FILE_OPEN);
+	Import(sl::file_read, Symbol::SL_FILE_READ);
+	Import(sl::file_close, Symbol::SL_FILE_CLOSE);
 	Import(sl::handle_create_internal, Symbol::SL_HANDLE_CREATE);
 	Import(sl::file_handle_destroy, Symbol::SL_FILE_HANDLE_DESTROY);
 	Import(sl::archive_lock_wlock, Symbol::ARCHIVE_LOCK_WLOCK);
@@ -159,6 +164,8 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);
+
+	sys_util_init_storage_directory();
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;

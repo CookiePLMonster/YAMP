@@ -142,11 +142,29 @@ void InjectTraps(const std::forward_list<void*>& addresses)
 
 void Patch_SysUtil(void* dll)
 {
+	// TODO: Unprotect before patching and lose the ::VP namespace
 	Trampoline* hop = Trampoline::MakeTrampoline(dll);
-	void* sys_util_enable_storage = hop->Jump(&sys_util_check_enable_storage);
-
-	for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH))
 	{
-		Memory::VP::InjectHook(addr, sys_util_enable_storage);
+		void* sys_util_enable_storage = hop->Jump(&sys_util_check_enable_storage);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH))
+		{
+			Memory::VP::InjectHook(addr, sys_util_enable_storage);
+		}
+	}
+
+	{
+		void* sys_util_load_systemdata_task = hop->Jump(&sys_util_start_load_systemdata_task);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_START_LOAD_SYSTEMDATA_TASK_PATCH))
+		{
+			Memory::VP::InjectHook(addr, sys_util_load_systemdata_task);
+		}
+	}
+
+		{
+		void* sys_util_save_systemdata_task = hop->Jump(&sys_util_start_save_systemdata_task);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH))
+		{
+			Memory::VP::InjectHook(addr, sys_util_save_systemdata_task);
+		}
 	}
 }

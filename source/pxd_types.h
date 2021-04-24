@@ -106,7 +106,10 @@ struct handle_t
 		} data;
 		uint32_t m_handle = 0;
 	} h;
+
+	bool operator==(const handle_t& handle) const { return h.m_handle == handle.h.m_handle; } 
 };
+inline constexpr handle_t INVALID_HANDLE {};
 
 struct alignas(8) file_handle_t
 {

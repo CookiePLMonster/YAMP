@@ -1,5 +1,7 @@
 #include "sl.h"
 
+#include "file_access.h"
+
 #include <Xinput.h>
 
 #include <algorithm>
@@ -206,6 +208,33 @@ handle_t thread_create(uint32_t (*p_routine)(uint64_t), uint64_t arg, const char
     return result;
 }
 
+handle_t file_open(const char* in_sz_file_path)
+{
+    handle_t result{};
+    file_open_internal(&result, in_sz_file_path);
+    return result;
+}
+
+handle_t file_create(const char* in_sz_file_path)
+{
+    handle_t result{};
+    file_create_internal(&result, in_sz_file_path);
+    return result;
+}
+
+int64_t file_write(handle_t h_file, const void* p_buffer, unsigned int write_size)
+{
+    int64_t result = -1;
+    file_handle_internal_t* file = file_handle_instance(h_file);
+    if (file == nullptr) return result;
+
+    if ((file->m_flags >> 7) & 1)
+    {
+        result = sm_context->p_file_access->write(h_file, p_buffer, write_size);
+    }
+    return result;
+}
+
 handle_t handle_create(void* ptr, uint32_t type)
 {
     handle_t result{};
@@ -227,6 +256,13 @@ void archive_lock::_afterConstruct()
 void file_handle_event::_afterConstruct()
 {
     eventHandle = CreateEventW(nullptr, TRUE, TRUE, nullptr);
+}
+
+void file_handle_internal_t::begin_async_request()
+{
+    file_handle_event* event = handle_instance<file_handle_event>(m_async_event, 3);
+    ResetEvent(event->eventHandle);
+    m_flags |= 4;
 }
 
 void file_handle_internal_t::end_async_request()

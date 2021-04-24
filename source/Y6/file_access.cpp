@@ -44,11 +44,18 @@ bool csl_file_access::open(const char* path, sl::handle_t handle)
 	return true;
 }
 
-bool csl_file_access::create(const char* /*path*/, sl::handle_t /*handle*/)
+bool csl_file_access::create(const char* path, sl::handle_t handle)
 {
-	// Deliberately unimplemented for now
-	assert(!"csl_file_access::create unimplemented!");
-	return false;
+	HANDLE file = CreateFileW(UTF8ToWchar(path).c_str(), GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+	if (file == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+
+	sl::file_handle_internal_t* internalHandle = sl::file_handle_instance(handle);
+	internalHandle->m_h_native = file;
+
+	return true;
 }
 
 bool csl_file_access::remove(const char*)
@@ -78,28 +85,42 @@ bool csl_file_access::is_exist(const char* path)
 
 int64_t csl_file_access::read(sl::handle_t handle, void* buffer, unsigned int size)
 {
+	int64_t result = -1;
 	sl::file_handle_internal_t* internalHandle = sl::file_handle_instance(handle);
 	if (internalHandle != nullptr)
 	{
 		HANDLE nativeHandle = reinterpret_cast<HANDLE>(internalHandle->m_h_native);
 		if (nativeHandle != INVALID_HANDLE_VALUE)
 		{
-			DWORD numBytesRead = 0;
+			DWORD numBytesRead;
 			if (ReadFile(nativeHandle, buffer, size, &numBytesRead, nullptr) != FALSE)
 			{
 				internalHandle->m_file_pointer += numBytesRead;
-				return numBytesRead;
+				result = numBytesRead;
 			}
 		}
 	}
-	return -1;
+	return result;
 }
 
-int64_t csl_file_access::write(sl::handle_t, const void*, unsigned int)
+int64_t csl_file_access::write(sl::handle_t handle, const void* buffer, unsigned int size)
 {
-	// Deliberately unimplemented for now
-	assert(!"csl_file_access::write unimplemented!");
-	return 0;
+	int64_t result = -1;
+	sl::file_handle_internal_t* internalHandle = sl::file_handle_instance(handle);
+	if (internalHandle != nullptr)
+	{
+		HANDLE nativeHandle = reinterpret_cast<HANDLE>(internalHandle->m_h_native);
+		if (nativeHandle != INVALID_HANDLE_VALUE)
+		{
+			DWORD numBytesWritten;
+			if (WriteFile(nativeHandle, buffer, size, &numBytesWritten, nullptr) != FALSE)
+			{
+				internalHandle->m_file_pointer += numBytesWritten;
+				result = numBytesWritten;
+			}
+		}
+	}
+	return result;
 }
 
 int64_t csl_file_access::get_size(sl::handle_t handle)

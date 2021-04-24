@@ -12,7 +12,7 @@ public:
 	virtual bool close(sl::handle_t handle) = 0;
 	virtual bool is_exist(const char *) = 0;
 	virtual int64_t read(sl::handle_t handle, void* buffer, unsigned int size) = 0;
-	virtual int64_t write(sl::handle_t, const void *, unsigned int) = 0;
+	virtual int64_t write(sl::handle_t handle, const void* buffer, unsigned int size) = 0;
 	virtual int64_t get_size(sl::handle_t handle) = 0;
 	virtual int64_t seek(sl::handle_t handle, int64_t offset, sl::FILE_SEEK seekMode) = 0;
 	virtual int64_t read_offset(sl::handle_t handle, void* buffer, unsigned int size, uint64_t offset) = 0;
@@ -35,7 +35,7 @@ public:
 	virtual bool close(sl::handle_t handle) override;
 	virtual bool is_exist(const char* path) override;
 	virtual int64_t read(sl::handle_t handle, void* buffer, unsigned int size) override;
-	virtual int64_t write(sl::handle_t, const void*, unsigned int) override;
+	virtual int64_t write(sl::handle_t handle, const void* buffer, unsigned int size) override;
 	virtual int64_t get_size(sl::handle_t handle) override;
 	virtual int64_t seek(sl::handle_t handle, int64_t offset, sl::FILE_SEEK seekMode) override;
 	virtual int64_t read_offset(sl::handle_t handle, void* buffer, unsigned int size, uint64_t offset) override;

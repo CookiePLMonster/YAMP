@@ -23,6 +23,18 @@ void* GetImportedFunction(void* lib, Symbol symbol)
 	case Symbol::D3DDEVICE:
 		symbolAddr = 0x180AD2DD8;
 		break;
+	case Symbol::SL_FILE_CREATE:
+		symbolAddr = 0x180020020;
+		break;
+	case Symbol::SL_FILE_OPEN:
+		symbolAddr = 0x18001FF20;
+		break;
+	case Symbol::SL_FILE_READ:
+		symbolAddr = 0x1800202E0;
+		break;
+	case Symbol::SL_FILE_CLOSE:
+		symbolAddr = 0x1800201D0;
+		break;
 	case Symbol::SL_HANDLE_CREATE:
 		symbolAddr = 0x1800214B0;
 		break;
@@ -67,6 +79,12 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 	{
 	case Symbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH:
 		result = { (void*)0x1800F0345, (void*)0x1801AF21A, (void*)0x1801AF2CF, (void*)0x1801AF61C, (void*)0x1801B6BE6, (void*)0x1801B6E8C, (void*)0x1801E639E, (void*)0x18020B32E };
+		break;
+	case Symbol::SYS_UTIL_START_LOAD_SYSTEMDATA_TASK_PATCH:
+		result = { (void*)0x1801B6C56 };
+		break;
+	case Symbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH:
+		result = { (void*)0x1801B6EE6 };
 		break;
 	default:
 		assert(!"Unreachable!");

@@ -15,6 +15,12 @@ enum class Symbol
 	GS_CONTEXT_PTR,
 	D3DDEVICE,
 
+	SL_FILE_CREATE,
+	SL_FILE_OPEN,
+	SL_FILE_READ,
+	// file_write is implemented by us, this is not a mistake
+	SL_FILE_CLOSE,
+
 	SL_HANDLE_CREATE,
 	SL_FILE_HANDLE_DESTROY,
 	PRJ_TRAP,
@@ -28,7 +34,9 @@ enum class Symbol
 
 	TRAP_ALLOC_INSTANCE_TBL,
 
-	// Lists
+	// Lists/patches
+	SYS_UTIL_START_LOAD_SYSTEMDATA_TASK_PATCH,
+	SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH,
 	SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH,
 
 };

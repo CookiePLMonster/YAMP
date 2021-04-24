@@ -88,6 +88,15 @@ handle_t handle_create(void* ptr, uint32_t type);
 handle_t semaphore_create(uint32_t initialCount);
 handle_t thread_create(uint32_t (*p_routine)(uint64_t), uint64_t arg, const char* name);
 
+inline handle_t* (*file_open_internal)(handle_t* obj, const char* in_sz_file_path);
+inline handle_t* (*file_create_internal)(handle_t* obj, const char* in_sz_file_path);
+handle_t file_open(const char* in_sz_file_path);
+handle_t file_create(const char* in_sz_file_path);
+
+inline int64_t (*file_read)(handle_t h_file, void* p_buffer, unsigned int read_size);
+inline int (*file_close)(handle_t h_file);
+int64_t file_write(handle_t h_file, const void* p_buffer, unsigned int write_size);
+
 struct alignas(16) file_handle_internal_t : public file_handle_t
 {
   volatile unsigned int m_flags;
@@ -110,6 +119,7 @@ struct alignas(16) file_handle_internal_t : public file_handle_t
   rwspinlock_t m_locked;
   file_handle_internal_t *mp_link;
 
+  void begin_async_request();
   void end_async_request();
   void callback(FILE_ASYNC_METHOD type, uint32_t status);
 
@@ -117,6 +127,7 @@ public:
 	void _afterConstruct();
 };
 static_assert(sizeof(file_handle_internal_t) == 0x4D0);
+static_assert(offsetof(file_handle_internal_t, m_buffer_size) == 1116);
 
 inline void (*file_handle_destroy)(sl::file_handle_internal_t* p_handle);
 	
