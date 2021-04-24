@@ -162,6 +162,9 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Restore saving
 	Patch_SysUtil(gameDll.get());
 
+	// Misc patches - bugfixes, un-folding no-ops etc
+	Patch_Misc(gameDll.get());
+
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);
 

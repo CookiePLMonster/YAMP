@@ -168,3 +168,21 @@ void Patch_SysUtil(void* dll)
 		}
 	}
 }
+
+static void assign_helper_enable_shared_from_this(...)
+{
+}
+
+void Patch_Misc(void* dll)
+{
+	// TODO: Unprotect before patching and lose the ::VP namespace
+	Trampoline* hop = Trampoline::MakeTrampoline(dll);
+	// prj::shared_ptr_internal::assign_helper_enable_shared_from_this folds with prj_trap, causing a false-positive log and eventually crashing
+	{
+		void* assign_helper = hop->Jump(&assign_helper_enable_shared_from_this);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS))
+		{
+			Memory::VP::InjectHook(addr, assign_helper);
+		}
+	}
+}
