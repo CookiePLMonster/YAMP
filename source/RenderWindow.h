@@ -20,9 +20,8 @@ public:
 	ID3D11DeviceContext* GetD3D11DeviceContext() const { return m_deviceContext.get(); }
 	IDXGISwapChain* GetSwapChain() const { return m_swapChain.get(); }
 
-	// TODO: Those are placeholers
-	uint32_t GetWidth() const { return 1280; }
-	uint32_t GetHeight() const { return 720; }
+	uint32_t GetWidth() const { return m_windowWidth; }
+	uint32_t GetHeight() const { return m_windowHeight; }
 
 	bool IsShuttingDown() const { return m_shuttingDownWindow.load(std::memory_order_relaxed); }
 
@@ -34,4 +33,6 @@ private:
 	wil::com_ptr<ID3D11Device> m_device;
 	wil::com_ptr<ID3D11DeviceContext> m_deviceContext;
 	wil::com_ptr<IDXGISwapChain> m_swapChain;
+
+	uint32_t m_windowWidth = 0, m_windowHeight = 0;
 };

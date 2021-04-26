@@ -65,6 +65,15 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 			swapChain.addressof(), device.addressof(), nullptr, deviceContext.addressof());
 		THROW_IF_FAILED(hr);
 
+		{
+			DXGI_SWAP_CHAIN_DESC createdSwapChain;
+			hr = swapChain->GetDesc(&createdSwapChain);
+			THROW_IF_FAILED(hr);
+
+			m_windowWidth = createdSwapChain.BufferDesc.Width;
+			m_windowHeight = createdSwapChain.BufferDesc.Height;
+		}
+
 		ShowWindow(window.get(), cmdShow);
 		UpdateWindow(window.get());
 

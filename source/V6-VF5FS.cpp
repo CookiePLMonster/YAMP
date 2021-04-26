@@ -96,6 +96,7 @@ static void ImportFunctions(HMODULE dll)
 	Import(cgs_device_context::reset_state_all_internal, Symbol::DEVICE_CONTEXT_RESET_STATE_ALL);
 	Import(gs::vb_create, Symbol::VB_CREATE);
 	Import(gs::ib_create, Symbol::IB_CREATE);
+	Import(screen_size, Symbol::SCREEN_SIZE_ARR);
 }
 
 static void PrefillVariables(HMODULE dll, const RenderWindow& window)
@@ -165,10 +166,14 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	// Misc patches - bugfixes, un-folding no-ops etc
 	Patch_Misc(gameDll.get());
 
+	// High res rendering support
+	Patch_RenderRes(gameDll.get(), window);
+
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);
 
 	sys_util_init_storage_directory();
+	sys_util_get_render_window(window);
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;

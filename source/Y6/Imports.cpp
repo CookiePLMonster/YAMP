@@ -59,6 +59,9 @@ void* GetImportedFunction(void* lib, Symbol symbol)
 	case Symbol::IB_CREATE:
 		symbolAddr = 0x18000EDE0;
 		break;
+	case Symbol::SCREEN_SIZE_ARR:
+		symbolAddr = 0x1802F1840;
+		break;
 
 	// Debug only
 	case Symbol::TRAP_ALLOC_INSTANCE_TBL:
@@ -89,8 +92,17 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 	case Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS_PATCH:
 		result = { (void*)0x1801D46DC };
 		break;
+	case Symbol::SYS_UTIL_GET_STARTUP_SCREEN_MODE_HOOK:
+		result = { (void*)0x180213FB0 };
+		break;
 	case Symbol::TASK_PAUSE_CTRL_COUNTDOWN_PATCH:
 		result = { (void*)0x1801E68FA, (void*)0x1801E694A };
+		break;
+	case Symbol::DISPLAY_WIDTH_VAR:
+		result = { (void*)(0x180223421 + 4), (void*)(0x1802234B7 + 1) };
+		break;
+	case Symbol::DISPLAY_HEIGHT_VAR:
+		result = { (void*)(0x180223436 + 4), (void*)(0x1802234AC + 1) };
 		break;
 	default:
 		assert(!"Unreachable!");

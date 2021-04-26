@@ -1,6 +1,8 @@
 #include "sys_util.h"
 
 #include "sl.h"
+#include "../RenderWindow.h"
+#include "../Utils/MemoryMgr.h"
 
 #include <ShlObj.h>
 #include <filesystem>
@@ -29,6 +31,12 @@ void sys_util_init_storage_directory()
 		s_path_to_systemdata.append(u8"Sega");
 		s_path_to_systemdata.append(u8"Virtua Fighter 5 Final Showdown");
 	}
+}
+
+static const RenderWindow* s_render_window_ptr = nullptr;
+void sys_util_get_render_window(const class RenderWindow& window)
+{
+	s_render_window_ptr = &window;
 }
 
 
@@ -88,4 +96,19 @@ void sys_util_start_save_systemdata_task(int port, const void* buf, unsigned int
 		cbSuccess = sl::file_write(file, buf, buf_size) == buf_size;
 	}
 	sl::file_close(file);
+}
+
+SCREEN_MODE sys_util_get_startup_screen_mode()
+{
+	// TODO: Is screen size for letterboxing or internal res scale?
+	auto& res = screen_size[SCREEN_MODE::HDTV_1080];
+	
+	// This memory is write protected, so cheat a bit
+	using namespace Memory::VP;
+	Patch(&res.width, s_render_window_ptr->GetWidth());
+	Patch(&res.render_width, s_render_window_ptr->GetWidth());
+	Patch(&res.height, s_render_window_ptr->GetHeight());
+	Patch(&res.render_height, s_render_window_ptr->GetHeight());
+
+	return SCREEN_MODE::HDTV_1080;
 }

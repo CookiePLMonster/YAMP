@@ -13,3 +13,4 @@ void InjectTraps(const std::forward_list<void*>& addresses);
 
 void Patch_SysUtil(void* dll);
 void Patch_Misc(void* dll);
+void Patch_RenderRes(void* dll, const RenderWindow& window);

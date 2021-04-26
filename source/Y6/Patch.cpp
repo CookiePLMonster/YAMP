@@ -167,6 +167,15 @@ void Patch_SysUtil(void* dll)
 			Memory::VP::InjectHook(addr, sys_util_save_systemdata_task);
 		}
 	}
+
+	// Support high res rendering
+	{
+		void* get_startup_screen_mode = hop->Jump(&sys_util_get_startup_screen_mode);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_GET_STARTUP_SCREEN_MODE_HOOK))
+		{
+			Memory::VP::InjectHook(addr, get_startup_screen_mode, PATCH_JUMP);
+		}
+	}
 }
 
 static void assign_helper_enable_shared_from_this(...)
@@ -199,5 +208,20 @@ void Patch_Misc(void* dll)
 		{
 			Memory::VP::InjectHook(addr, get_frame_speed_stub);
 		}
+	}
+}
+
+void Patch_RenderRes(void* dll, const RenderWindow& window)
+{
+	// TODO: Letterbox to 16:9
+	const uint32_t newWidth = window.GetWidth();
+	const uint32_t newHeight = window.GetHeight();
+	for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::DISPLAY_WIDTH_VAR))
+	{
+		Memory::VP::Patch(addr, newWidth);
+	}
+	for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::DISPLAY_HEIGHT_VAR))
+	{
+		Memory::VP::Patch(addr, newHeight);
 	}
 }
