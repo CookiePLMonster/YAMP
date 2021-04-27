@@ -160,7 +160,7 @@ void Patch_SysUtil(void* dll)
 		}
 	}
 
-		{
+	{
 		void* sys_util_save_systemdata_task = hop->Jump(&sys_util_start_save_systemdata_task);
 		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH))
 		{
@@ -174,6 +174,31 @@ void Patch_SysUtil(void* dll)
 		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_GET_STARTUP_SCREEN_MODE_HOOK))
 		{
 			Memory::VP::InjectHook(addr, get_startup_screen_mode, PATCH_JUMP);
+		}
+	}
+	{
+		ScreenSize* sizes = reinterpret_cast<ScreenSize*>(hop->Pointer<ScreenSize[SCREEN_MODE::SCREEN_MODE_MAX + 2]>());
+		
+		// screen_size contains the original game pointer, so fill our own space and then overwrite it
+		std::copy_n(screen_size, SCREEN_MODE::SCREEN_MODE_MAX, sizes);
+		screen_size = sizes;
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SCREEN_SIZE_ARRAY_PTR))
+		{
+			Memory::VP::WriteOffsetValue(addr, sizes);
+		}
+	}
+	{
+		void* conv_pos = hop->Jump(&get_screen_conv_pos);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::GET_SCREEN_CONV_POS_HOOK))
+		{
+			Memory::VP::InjectHook(addr, conv_pos, PATCH_JUMP);
+		}
+	}
+	{
+		void* conv_scale = hop->Jump(&get_screen_conv_scale);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::GET_SCREEN_CONV_SCALE_HOOK))
+		{
+			Memory::VP::InjectHook(addr, conv_scale, PATCH_JUMP);
 		}
 	}
 }

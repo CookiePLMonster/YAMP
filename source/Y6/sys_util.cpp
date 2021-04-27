@@ -40,6 +40,97 @@ void sys_util_get_render_window(const class RenderWindow& window)
 }
 
 
+void get_screen_conv_pos(vecmath::Vector2<float>* dst_pos, SCREEN_MODE dst_mode, const vecmath::Vector2<float>* src_pos, SCREEN_MODE src_mode)
+{
+	if (dst_pos == nullptr || src_pos == nullptr) return;
+
+	if (dst_mode == SCREEN_MODE::IGNORE_SCREEN_MODE || src_mode == SCREEN_MODE::IGNORE_SCREEN_MODE)
+	{
+		*dst_pos = *src_pos;
+		return;
+	}
+
+	const ScreenSize& src_res = screen_size[src_mode];
+	const ScreenSize& dst_res = screen_size[dst_mode];
+
+	float width_scale = 1.0f;
+	float height_scale = 1.0f;
+	if (dst_mode != src_mode)
+	{
+		const float width_res_scale = static_cast<float>(dst_res.width) / src_res.width;
+		const float height_res_scale = static_cast<float>(dst_res.height) / src_res.height;
+		if (src_res.wide_flag == dst_res.wide_flag)
+		{
+			const bool src_is_hd = src_mode == SCREEN_MODE::WXGA2 || (src_mode >= SCREEN_MODE::HDTV_720 && src_mode <= SCREEN_MODE::HDTV_1080);
+			const bool dst_is_hd = dst_mode == SCREEN_MODE::WXGA2 || (dst_mode >= SCREEN_MODE::HDTV_720 && dst_mode <= SCREEN_MODE::HDTV_1080);
+			width_scale = width_res_scale;
+			height_scale = height_res_scale;
+			if (src_is_hd != dst_is_hd)
+				height_scale = width_scale;
+		}
+		else
+		{
+			assert(!"Unimplemented!");
+		}
+	}
+
+	height_scale *= src_pos->y - (src_res.height / 2.0f);
+	dst_pos->y = height_scale + (dst_res.height / 2.0f);
+
+	width_scale *= (src_pos->x - (src_res.width / 2.0f));
+	dst_pos->x = width_scale + (dst_res.width / 2.0f);
+
+	// TODO: This hack present in the game code breaks scaling, figure out how to fix it
+	if ((src_mode == SCREEN_MODE::XGA || src_mode == SCREEN_MODE::WXGA) && dst_mode == SCREEN_MODE::HDTV_720)
+	{
+		const float height_difference = src_res.height - dst_res.height;
+		dst_pos->y -= height_difference / 2.0f;
+	}
+}
+
+void get_screen_conv_scale(vecmath::Vector2<float>* scale, SCREEN_MODE dst_mode, SCREEN_MODE src_mode)
+{
+	if (scale == nullptr) return;
+
+	*scale = { 1.0f, 1.0f };
+	if (dst_mode == SCREEN_MODE::IGNORE_SCREEN_MODE || src_mode == SCREEN_MODE::IGNORE_SCREEN_MODE) return;
+	if (dst_mode == src_mode) return;
+
+	const ScreenSize& src_res = screen_size[src_mode];
+	const ScreenSize& dst_res = screen_size[dst_mode];
+
+	scale->x = static_cast<float>(dst_res.width) / src_res.width;
+	scale->y = static_cast<float>(dst_res.height) / src_res.height;
+	if (src_res.wide_flag == dst_res.wide_flag)
+	{
+		const bool src_is_hd = src_mode == SCREEN_MODE::WXGA2 || (src_mode >= SCREEN_MODE::HDTV_720 && src_mode <= SCREEN_MODE::HDTV_1080);
+		const bool dst_is_hd = dst_mode == SCREEN_MODE::WXGA2 || (dst_mode >= SCREEN_MODE::HDTV_720 && dst_mode <= SCREEN_MODE::HDTV_1080);
+		if (src_is_hd != dst_is_hd)
+			scale->y = scale->x;
+	}
+	else
+	{
+		if (src_mode != SCREEN_MODE::XGA)
+		{
+			if (src_mode == HDTV_720)
+			{
+				scale->x = scale->y = dst_res.height / 768.0f;
+			}
+			else if (src_mode == HDTV_1080)
+			{
+				scale->x = scale->y = dst_res.height / 1200.0f;
+			}
+		}
+		else
+		{
+			if (dst_mode == SCREEN_MODE::HDTV_720)
+			{
+				scale->x = scale->y = 1.0f;
+			}
+		}
+	}
+}
+
 bool sys_util_check_enable_storage(int port)
 {
 	// TODO: Implement properly
@@ -101,7 +192,7 @@ void sys_util_start_save_systemdata_task(int port, const void* buf, unsigned int
 SCREEN_MODE sys_util_get_startup_screen_mode()
 {
 	// TODO: Is screen size for letterboxing or internal res scale?
-	auto& res = screen_size[SCREEN_MODE::HDTV_1080];
+	auto& res = screen_size[SCREEN_MODE::CUSTOM_SCREEN_MODE];
 	
 	// This memory is write protected, so cheat a bit
 	using namespace Memory::VP;
@@ -109,6 +200,11 @@ SCREEN_MODE sys_util_get_startup_screen_mode()
 	Patch(&res.render_width, s_render_window_ptr->GetWidth());
 	Patch(&res.height, s_render_window_ptr->GetHeight());
 	Patch(&res.render_height, s_render_window_ptr->GetHeight());
+	res.wide_flag = true;
+	res.render_xoffset = 0;
+	res.render_yoffset = 0;
 
-	return SCREEN_MODE::HDTV_1080;
+	//Patch(&res.wide_flag, false);
+
+	return SCREEN_MODE::HDTV_720;
 }

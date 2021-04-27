@@ -104,6 +104,15 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 	case Symbol::DISPLAY_HEIGHT_VAR:
 		result = { (void*)(0x180223436 + 4), (void*)(0x1802234AC + 1) };
 		break;
+	case Symbol::SCREEN_SIZE_ARRAY_PTR:
+		result = { (void*)(0x180175FD3 + 3), /*(void*)(0x1801760A5 + 3), (void*)(0x180176290 + 3),*/ (void*)(0x18017639E + 3) };
+		break;
+	case Symbol::GET_SCREEN_CONV_POS_HOOK:
+		result = { (void*)0x180176060 };
+		break;
+	case Symbol::GET_SCREEN_CONV_SCALE_HOOK:
+		result = { (void*)0x180176250 };
+		break;
 	default:
 		assert(!"Unreachable!");
 		break;

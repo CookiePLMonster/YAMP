@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../vecmath.h"
+
 enum SCREEN_MODE
 {
 	QVGA = 0x0,
@@ -35,6 +37,9 @@ struct ScreenSize
 	int render_height;
 };
 inline ScreenSize* screen_size;
+
+void get_screen_conv_pos(vecmath::Vector2<float>* dst_pos, SCREEN_MODE dst_mode, const vecmath::Vector2<float>* src_pos, SCREEN_MODE src_mode);
+void get_screen_conv_scale(vecmath::Vector2<float>* scale, SCREEN_MODE dst_mode, SCREEN_MODE src_mode);
 
 bool sys_util_check_enable_storage(int port);
 void sys_util_start_load_systemdata_task(int port, void* buf, unsigned int buf_size, bool autoload, bool create, void (*cbfunc)(bool success, bool creator));
