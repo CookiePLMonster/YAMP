@@ -32,10 +32,12 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		const ATOM windowClass = RegisterClassEx(&wndClass);
 		THROW_LAST_ERROR_IF(windowClass == 0);
 
-		RECT clientArea { 0, 0, 1280, 720 };
-		AdjustWindowRect(&clientArea, WS_OVERLAPPEDWINDOW, FALSE);
+		DWORD dwWindowStyle = WS_POPUP;
 
-		wil::unique_hwnd window(CreateWindowExW(0, L"YAKUZA_VF5FS", L"Virtua Fighter 5: Final Showdown", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		RECT clientArea { 0, 0, 1280, 720 };
+		AdjustWindowRect(&clientArea, dwWindowStyle, FALSE);
+
+		wil::unique_hwnd window(CreateWindowExW(0, L"YAKUZA_VF5FS", L"Virtua Fighter 5: Final Showdown", dwWindowStyle, CW_USEDEFAULT, CW_USEDEFAULT,
 			clientArea.right - clientArea.left, clientArea.bottom - clientArea.top, nullptr, nullptr, instance, nullptr));
 		THROW_LAST_ERROR_IF_NULL(window);
 
@@ -56,7 +58,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		swapChainDesc.Windowed = TRUE;
 
 #ifdef _DEBUG
-		UINT Flags = 0;//D3D11_CREATE_DEVICE_DEBUG;
+		UINT Flags = D3D11_CREATE_DEVICE_DEBUG;
 #else
 		UINT Flags = 0;
 #endif

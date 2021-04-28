@@ -61,8 +61,8 @@ void get_screen_conv_pos(vecmath::Vector2<float>* dst_pos, SCREEN_MODE dst_mode,
 		const float height_res_scale = static_cast<float>(dst_res.height) / src_res.height;
 		if (src_res.wide_flag == dst_res.wide_flag)
 		{
-			const bool src_is_hd = src_mode == SCREEN_MODE::WXGA2 || (src_mode >= SCREEN_MODE::HDTV_720 && src_mode <= SCREEN_MODE::HDTV_1080);
-			const bool dst_is_hd = dst_mode == SCREEN_MODE::WXGA2 || (dst_mode >= SCREEN_MODE::HDTV_720 && dst_mode <= SCREEN_MODE::HDTV_1080);
+			const bool src_is_hd = src_mode == SCREEN_MODE::WXGA2 || src_mode >= SCREEN_MODE::HDTV_720;
+			const bool dst_is_hd = dst_mode == SCREEN_MODE::WXGA2 || dst_mode >= SCREEN_MODE::HDTV_720;
 			width_scale = width_res_scale;
 			height_scale = height_res_scale;
 			if (src_is_hd != dst_is_hd)
@@ -81,9 +81,9 @@ void get_screen_conv_pos(vecmath::Vector2<float>* dst_pos, SCREEN_MODE dst_mode,
 	dst_pos->x = width_scale + (dst_res.width / 2.0f);
 
 	// TODO: This hack present in the game code breaks scaling, figure out how to fix it
-	if ((src_mode == SCREEN_MODE::XGA || src_mode == SCREEN_MODE::WXGA) && dst_mode == SCREEN_MODE::HDTV_720)
+	if ((src_mode == SCREEN_MODE::XGA || src_mode == SCREEN_MODE::WXGA) && dst_mode >= SCREEN_MODE::HDTV_720)
 	{
-		const float height_difference = src_res.height - dst_res.height;
+		const float height_difference = src_res.height - (720.0f - 240.0f);
 		dst_pos->y -= height_difference / 2.0f;
 	}
 }
@@ -103,8 +103,8 @@ void get_screen_conv_scale(vecmath::Vector2<float>* scale, SCREEN_MODE dst_mode,
 	scale->y = static_cast<float>(dst_res.height) / src_res.height;
 	if (src_res.wide_flag == dst_res.wide_flag)
 	{
-		const bool src_is_hd = src_mode == SCREEN_MODE::WXGA2 || (src_mode >= SCREEN_MODE::HDTV_720 && src_mode <= SCREEN_MODE::HDTV_1080);
-		const bool dst_is_hd = dst_mode == SCREEN_MODE::WXGA2 || (dst_mode >= SCREEN_MODE::HDTV_720 && dst_mode <= SCREEN_MODE::HDTV_1080);
+		const bool src_is_hd = src_mode == SCREEN_MODE::WXGA2 || src_mode >= SCREEN_MODE::HDTV_720;
+		const bool dst_is_hd = dst_mode == SCREEN_MODE::WXGA2 || dst_mode >= SCREEN_MODE::HDTV_720;
 		if (src_is_hd != dst_is_hd)
 			scale->y = scale->x;
 	}
@@ -123,9 +123,9 @@ void get_screen_conv_scale(vecmath::Vector2<float>* scale, SCREEN_MODE dst_mode,
 		}
 		else
 		{
-			if (dst_mode == SCREEN_MODE::HDTV_720)
+			if (dst_mode >= SCREEN_MODE::HDTV_720)
 			{
-				scale->x = scale->y = 1.0f;
+				scale->x = scale->y = dst_res.height / 720.0f;
 			}
 		}
 	}
@@ -206,5 +206,5 @@ SCREEN_MODE sys_util_get_startup_screen_mode()
 
 	//Patch(&res.wide_flag, false);
 
-	return SCREEN_MODE::HDTV_720;
+	return SCREEN_MODE::CUSTOM_SCREEN_MODE;
 }
