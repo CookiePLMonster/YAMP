@@ -160,11 +160,19 @@ void Patch_SysUtil(void* dll)
 		}
 	}
 
-		{
+	{
 		void* sys_util_save_systemdata_task = hop->Jump(&sys_util_start_save_systemdata_task);
 		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH))
 		{
 			Memory::VP::InjectHook(addr, sys_util_save_systemdata_task);
+		}
+	}
+
+	{
+		void* sys_util_circle_enter = hop->Jump(&sys_util_is_enter_circle);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_IS_ENTER_CIRCLE_PATCH))
+		{
+			Memory::VP::InjectHook(addr, sys_util_circle_enter);
 		}
 	}
 }
@@ -176,6 +184,12 @@ static void assign_helper_enable_shared_from_this(...)
 static float get_frame_speed_pause_stub()
 {
 	return 1.0f;
+}
+
+static void* (*orgVF5AppCtor)(void* obj, int argc, char** argv);
+static void* VF5AppCtor_arguments(void* obj, int /*argc*/, char** /*argv*/)
+{
+	return orgVF5AppCtor(obj, __argc, __argv);
 }
 
 void Patch_Misc(void* dll)
@@ -199,5 +213,14 @@ void Patch_Misc(void* dll)
 		{
 			Memory::VP::InjectHook(addr, get_frame_speed_stub);
 		}
+	}
+
+	// Pass commandline arguments from the launcher
+	{
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::VF5_APP_CTOR_PATCH))
+		{
+			Memory::VP::ReadCall(addr, orgVF5AppCtor);
+			Memory::VP::InjectHook(addr, hop->Jump(VF5AppCtor_arguments));;
+		}	
 	}
 }

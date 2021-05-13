@@ -89,3 +89,8 @@ void sys_util_start_save_systemdata_task(int port, const void* buf, unsigned int
 	}
 	sl::file_close(file);
 }
+
+bool sys_util_is_enter_circle()
+{
+	return false;
+}
