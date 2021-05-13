@@ -242,23 +242,26 @@ bool Y6::VF5FS::GameLoop(module_func_t func)
 
 	// TODO: This is needed, figure out what fields exactly cause it
 	execute_info.pad[0] = {};
+	execute_info.pad[1] = {};
 
 	// TODO: Set up mappings better
 	{
 		size_t i = 0;
-		auto& mappings = execute_info.assign[0];
-		mappings[i++] = vf5fs_execute_info_t::assign_p;
-		mappings[i++] = vf5fs_execute_info_t::assign_k;
-		mappings[i++] = vf5fs_execute_info_t::assign_g;
-		mappings[i++] = vf5fs_execute_info_t::assign_p;
-		mappings[i++] = vf5fs_execute_info_t::assign_pg;
-		mappings[i++] = vf5fs_execute_info_t::assign_pkg;
-		mappings[i++] = vf5fs_execute_info_t::assign_pk;
-		mappings[i++] = vf5fs_execute_info_t::assign_kg;
+		auto& mappings1P = execute_info.assign[0];
+		auto& mappings2P = execute_info.assign[1];
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_p; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_k; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_g; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_p; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_pg; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_pkg; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_pk; i++;
+		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_kg; i++;
 	}
 
 	// TODO: Beautify
-	execute_info.pad[0].set_state();
+	execute_info.pad[0].set_state(0);
+	execute_info.pad[1].set_state(1);
 	execute_info.status |= 2;
 
 	if (func(sizeof(execute_info), &execute_info) != 0) return false;

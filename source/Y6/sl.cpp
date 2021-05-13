@@ -463,10 +463,10 @@ namespace
     }
 };
 
-void csl_pad::set_state()
+void csl_pad::set_state(unsigned int index)
 {
     m_prev = std::exchange(m_now, 0);
-    _set_state_xi(0, &m_now, &m_x1, &m_y1, m_buttons);
+    _set_state_xi(index, &m_now, &m_x1, &m_y1, m_buttons);
 
     m_push = ~m_prev & m_now;
     m_pull = m_prev & ~m_now;

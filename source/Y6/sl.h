@@ -19,7 +19,7 @@ class csl_file_async_request;
 struct csl_pad
 {
 public:
-	void set_state();
+	void set_state(unsigned int index);
 
 	unsigned int m_now;
 	unsigned int m_push;
