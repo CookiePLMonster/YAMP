@@ -245,7 +245,8 @@ bool Y6::VF5FS::GameLoop(module_func_t func)
 	execute_info.pad[1] = {};
 
 	// TODO: Set up mappings better
-	{
+	// They're ignored now, in-game mappings are used instead
+	/*{
 		size_t i = 0;
 		auto& mappings1P = execute_info.assign[0];
 		auto& mappings2P = execute_info.assign[1];
@@ -257,7 +258,7 @@ bool Y6::VF5FS::GameLoop(module_func_t func)
 		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_pkg; i++;
 		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_pk; i++;
 		mappings1P[i] = mappings2P[i] = vf5fs_execute_info_t::assign_kg; i++;
-	}
+	}*/
 
 	// TODO: Beautify
 	execute_info.pad[0].set_state(0);

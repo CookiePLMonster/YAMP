@@ -237,9 +237,19 @@ void Patch_Misc(void* dll)
 		float& posX = hop->Reference<float>();
 		posX = 250.0f;
 
-		for (auto addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::PRESS_START_POS_X_PTR_PATCH))
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::PRESS_START_POS_X_PTR_PATCH))
 		{
 			Memory::VP::WriteOffsetValue(addr, &posX);
+		}
+	}
+
+
+	// Reinstate button mappings
+	// TODO: Only console mode?
+	{
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::CS_SWITCH_MAPPING_OVERRIDE_PATCH))
+		{
+			Memory::VP::Nop(addr, 9);
 		}
 	}
 }

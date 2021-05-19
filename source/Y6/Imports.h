@@ -44,6 +44,7 @@ enum class Symbol
 	VF5_APP_CTOR_PATCH,
 	PRESS_START_POS_Y_PATCH,
 	PRESS_START_POS_X_PTR_PATCH,
+	CS_SWITCH_MAPPING_OVERRIDE_PATCH,
 };
 
 void* GetImportedFunction(void* lib, Symbol symbol);

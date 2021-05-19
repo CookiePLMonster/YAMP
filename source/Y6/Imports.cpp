@@ -104,6 +104,9 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 	case Symbol::PRESS_START_POS_X_PTR_PATCH:
 		result = { (void*)(0x1800E632E+4), (void*)(0x1800E63A9+4), (void*)(0x1800E6941+4) };
 		break;
+	case Symbol::CS_SWITCH_MAPPING_OVERRIDE_PATCH:
+		result = { (void*)0x1801AAC1D, (void*)0x1801AAC33, (void*)0x1801AAC49, (void*)0x1801AAC5F, (void*)0x1801AAC75, (void*)0x1801AAC8B, (void*)0x1801AACA1, (void*)0x1801AACBA };
+		break;
 	default:
 		assert(!"Unreachable!");
 		break;
