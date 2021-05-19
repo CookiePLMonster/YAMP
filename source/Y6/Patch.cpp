@@ -126,10 +126,13 @@ static void prj_trap(const char* format, ...)
 #endif
 }
 
-void ReinstateLogging(void* logFunc)
+void ReinstateLogging(void* dll)
 {
-	Trampoline* t = Trampoline::MakeTrampoline(logFunc);
-	Memory::VP::InjectHook(logFunc, t->Jump(&prj_trap), PATCH_JUMP);
+	Trampoline* t = Trampoline::MakeTrampoline(dll);
+	{
+		void* func = Imports::GetImportedFunction(dll, Imports::Symbol::PRJ_TRAP);
+		Memory::VP::InjectHook(func, t->Jump(&prj_trap), PATCH_JUMP);
+	}
 }
 
 void InjectTraps(const std::forward_list<void*>& addresses)
@@ -222,5 +225,21 @@ void Patch_Misc(void* dll)
 			Memory::VP::ReadCall(addr, orgVF5AppCtor);
 			Memory::VP::InjectHook(addr, hop->Jump(VF5AppCtor_arguments));;
 		}	
+	}
+
+	// Reinstate "Press START button"
+	{
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::PRESS_START_POS_Y_PATCH))
+		{
+			Memory::VP::Patch<float>(addr, 320.0f);
+		}
+
+		float& posX = hop->Reference<float>();
+		posX = 250.0f;
+
+		for (auto addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::PRESS_START_POS_X_PTR_PATCH))
+		{
+			Memory::VP::WriteOffsetValue(addr, &posX);
+		}
 	}
 }

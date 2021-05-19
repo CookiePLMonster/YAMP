@@ -98,6 +98,12 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 	case Symbol::VF5_APP_CTOR_PATCH:
 		result = { (void*)0x18020F3E1 };
 		break;
+	case Symbol::PRESS_START_POS_Y_PATCH:
+		result = { (void*)0x180293710 };
+		break;
+	case Symbol::PRESS_START_POS_X_PTR_PATCH:
+		result = { (void*)(0x1800E632E+4), (void*)(0x1800E63A9+4), (void*)(0x1800E6941+4) };
+		break;
 	default:
 		assert(!"Unreachable!");
 		break;

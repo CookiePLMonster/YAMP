@@ -155,7 +155,7 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	PrefillVariables(gameDll.get(), window); // Pre-fill those variables gs/sl initialization relies on
 
 	// Install hooks re-adding logging
-	ReinstateLogging(Imports::GetImportedFunction(gameDll.get(), Imports::Symbol::PRJ_TRAP));
+	ReinstateLogging(gameDll.get());
 	// Install additional "assertions"
 	InjectTraps(gameDll.get());
 
