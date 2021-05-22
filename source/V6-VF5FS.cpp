@@ -13,6 +13,10 @@
 #include "Y6/sys_util.h"
 #include "Y6/cs_game.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_win32.h"
+#include "imgui/imgui_impl_dx11.h"
+
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
 // Contexts
@@ -265,15 +269,32 @@ bool Y6::VF5FS::GameLoop(module_func_t func, RenderWindow& window)
 	execute_info.pad[1].set_state(1);
 	execute_info.status |= 2;
 
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
 	if (func(sizeof(execute_info), &execute_info) != 0) return false;
 
 	cgs_tex* display_tex = gs::sm_context->handle_tex.get(execute_info.output_texid);
 	if (display_tex == nullptr) return false;
 	if (display_tex->m_type != 2) return false;
 
+	ImGui::ShowDemoWindow();
+
+	ImGui::Render();
+
 	// TODO: Beautify this
 	auto& swapChain = gs::sm_context->sbgl_device.m_swap_chain;
 	window.BlitGameFrame(display_tex->mp_sbgl_resource->m_pD3DShaderResourceView);
+
+	ImDrawData* drawData = ImGui::GetDrawData();
+	if (drawData->TotalVtxCount > 0)
+	{
+		ID3D11RenderTargetView* backBufferRTV = swapChain.m_pD3DRenderTargetView;
+		context->OMSetRenderTargets(1, &backBufferRTV, nullptr);
+
+		ImGui_ImplDX11_RenderDrawData(drawData);
+	}
 
 	HRESULT hr = swapChain.m_pDXGISwapChain->Present(1, 0);
 	if (FAILED(hr)) return false;

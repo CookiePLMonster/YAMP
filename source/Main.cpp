@@ -3,6 +3,7 @@
 
 #include "RenderWindow.h"
 #include "Y6-VF5FS.h"
+#include "imgui/imgui.h"
 
 #include "wil/com.h"
 
@@ -12,6 +13,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// Once this is handled, remove this
 	auto shutdownHack = wil::scope_exit([] { TerminateProcess(GetCurrentProcess(), 0); });
 	auto coinit = wil::CoInitializeEx(COINIT_MULTITHREADED);
+
+	IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+
+    ImGuiIO& io = ImGui::GetIO();
+    io.IniFilename = nullptr;
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
 	HMODULE dll = Y6::VF5FS::LoadDLL();
 

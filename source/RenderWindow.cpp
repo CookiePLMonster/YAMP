@@ -1,5 +1,9 @@
 #include "RenderWindow.h"
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_win32.h"
+#include "imgui/imgui_impl_dx11.h"
+
 #include "wil/win32_helpers.h"
 
 #include <DirectXMath.h>
@@ -10,8 +14,13 @@
 
 static constexpr DXGI_FORMAT OUTPUT_FORMAT = DXGI_FORMAT_B8G8R8A8_UNORM;
 
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 static LRESULT WINAPI WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
+	LRESULT imguiResult = ImGui_ImplWin32_WndProcHandler(hWnd, Msg, wParam, lParam);
+	if (imguiResult != 0) return imguiResult;
+
 	switch (Msg)
 	{
 	case WM_DESTROY:
@@ -50,6 +59,8 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 			clientArea.right - clientArea.left, clientArea.bottom - clientArea.top, nullptr, nullptr, instance, nullptr));
 		THROW_LAST_ERROR_IF_NULL(window);
 
+		ImGui_ImplWin32_Init(window.get());
+
 		// TODO: Set up proper feature levels and a debug layer
 		wil::com_ptr<ID3D11Device> device;
 		wil::com_ptr<ID3D11DeviceContext> deviceContext;
@@ -62,6 +73,8 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 
 		HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, Flags, nullptr, 0, D3D11_SDK_VERSION, device.addressof(), nullptr, deviceContext.addressof());
 		THROW_IF_FAILED(hr);
+
+		ImGui_ImplDX11_Init(device.get(), deviceContext.get());
 
 		wil::com_ptr<IDXGISwapChain> swapChain = CreateSwapChainForWindow(device.get(), window.get());
 
