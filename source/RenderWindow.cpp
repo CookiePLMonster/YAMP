@@ -3,15 +3,12 @@
 #include "wil/win32_helpers.h"
 
 #include <DirectXMath.h>
-#include <d3d11_1.h>
 
-// TODO: Remove
-#include <d3dcompiler.h>
-#ifdef _MSC_VER
-#pragma comment(lib, "d3dcompiler")
-#endif
+#include <algorithm>
 
 #pragma comment(lib, "d3d11.lib")
+
+static constexpr DXGI_FORMAT OUTPUT_FORMAT = DXGI_FORMAT_B8G8R8A8_UNORM;
 
 static LRESULT WINAPI WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
@@ -51,28 +48,17 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		// TODO: Set up proper feature levels and a debug layer
 		wil::com_ptr<ID3D11Device> device;
 		wil::com_ptr<ID3D11DeviceContext> deviceContext;
-		wil::com_ptr<IDXGISwapChain> swapChain;
-
-		DXGI_SWAP_CHAIN_DESC swapChainDesc {};
-		swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
-		swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
-		swapChainDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-		swapChainDesc.SampleDesc.Count = 1;                             
-		swapChainDesc.SampleDesc.Quality = 0;
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.BufferCount = 1;
-		swapChainDesc.OutputWindow = window.get();
-		swapChainDesc.Windowed = TRUE;
-
+		
 #ifdef _DEBUG
 		UINT Flags = 0;//D3D11_CREATE_DEVICE_DEBUG;
 #else
 		UINT Flags = 0;
 #endif
 
-		HRESULT hr = D3D11CreateDeviceAndSwapChain(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, Flags, nullptr, 0, D3D11_SDK_VERSION, &swapChainDesc,
-			swapChain.addressof(), device.addressof(), nullptr, deviceContext.addressof());
+		HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, Flags, nullptr, 0, D3D11_SDK_VERSION, device.addressof(), nullptr, deviceContext.addressof());
 		THROW_IF_FAILED(hr);
+
+		wil::com_ptr<IDXGISwapChain> swapChain = CreateSwapChainForWindow(device.get(), window.get());
 
 		ShowWindow(window.get(), cmdShow);
 		UpdateWindow(window.get());
@@ -83,6 +69,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		m_swapChain = std::move(swapChain);
 
 		CreateRenderResources();
+		EnumerateDisplayModes();
 		startupEvent.SetEvent();
 
 		BOOL ret;
@@ -139,6 +126,39 @@ void RenderWindow::BlitGameFrame(ID3D11ShaderResourceView* src)
 	m_deviceContext->RSSetViewports(1, &viewport);
 
 	m_deviceContext->Draw(3, 0);
+}
+
+wil::com_ptr<IDXGISwapChain> RenderWindow::CreateSwapChainForWindow(ID3D11Device* device, HWND window)
+{
+	wil::com_ptr<IDXGISwapChain> swapChain;
+
+	DXGI_SWAP_CHAIN_DESC swapChainDesc {};
+	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
+	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
+	swapChainDesc.BufferDesc.Format = OUTPUT_FORMAT;
+	swapChainDesc.SampleDesc.Count = 1;                             
+	swapChainDesc.SampleDesc.Quality = 0;
+	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+	swapChainDesc.BufferCount = 1;
+	swapChainDesc.OutputWindow = window;
+	swapChainDesc.Windowed = TRUE;
+
+	wil::com_ptr<IDXGIDevice> dxgiDevice;
+	HRESULT hr = device->QueryInterface(IID_PPV_ARGS(dxgiDevice.addressof()));
+	THROW_IF_FAILED(hr);
+
+	wil::com_ptr<IDXGIAdapter> adapter;
+	hr = dxgiDevice->GetAdapter(adapter.addressof());
+	THROW_IF_FAILED(hr);
+
+	wil::com_ptr<IDXGIFactory> factory;
+	hr = adapter->GetParent(IID_PPV_ARGS(factory.addressof()));
+	THROW_IF_FAILED(hr);
+
+	hr = factory->CreateSwapChain(device, &swapChainDesc, swapChain.addressof());
+	THROW_IF_FAILED(hr);
+
+	return swapChain;
 }
 
 void RenderWindow::CreateRenderResources()
@@ -393,4 +413,34 @@ void RenderWindow::CreateRenderResources()
 
 		m_vbStride = sizeof(vertexBuffer[0]);
 	}
+}
+
+void RenderWindow::EnumerateDisplayModes()
+{
+	auto dxgiDevice = m_device.query<IDXGIDevice>();
+	wil::com_ptr<IDXGIAdapter> adapter;
+	HRESULT hr = dxgiDevice->GetAdapter(adapter.addressof());
+	THROW_IF_FAILED(hr);
+
+	wil::com_ptr<IDXGIOutput> output;
+	hr = adapter->EnumOutputs(0, output.addressof());
+	THROW_IF_FAILED(hr);
+
+	UINT numModes = 0;
+	hr = output->GetDisplayModeList(OUTPUT_FORMAT, 0, &numModes, nullptr);
+	THROW_IF_FAILED(hr);
+
+	auto displayModes = std::make_unique<DXGI_MODE_DESC[]>(numModes);
+	output->GetDisplayModeList(OUTPUT_FORMAT, 0, &numModes, displayModes.get());
+	for (const auto& mode : wil::make_range(displayModes.get(), numModes))
+	{
+		if (mode.ScanlineOrdering != DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE || mode.Scaling != DXGI_MODE_SCALING_UNSPECIFIED) continue;
+
+		m_displayModes.push_back({mode.Width, mode.Height, static_cast<float>(mode.RefreshRate.Numerator) / mode.RefreshRate.Denominator});
+	}
+
+	// Refresh rates seem to be unsorted, fix it
+	std::sort(m_displayModes.begin(), m_displayModes.end(), [](const DisplayMode& left, const DisplayMode& right) {
+		return std::tie(left.Width, left.Height, left.RefreshRate) < std::tie(right.Width, right.Height, right.RefreshRate);
+	});
 }

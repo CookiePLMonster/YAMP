@@ -8,11 +8,18 @@
 #include "wil/resource.h"
 
 #include <thread>
+#include <vector>
 
 // A simple manager for the window handle and the D3D11 device
 class RenderWindow
 {
 public:
+	struct DisplayMode
+	{
+		uint32_t Width, Height;
+		float RefreshRate;
+	};
+
 	RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdShow);
 	~RenderWindow();
 
@@ -29,7 +36,9 @@ public:
 	bool IsShuttingDown() const { return m_shuttingDownWindow.load(std::memory_order_relaxed); }
 
 private:
+	wil::com_ptr<IDXGISwapChain> CreateSwapChainForWindow(ID3D11Device* device, HWND window);
 	void CreateRenderResources();
+	void EnumerateDisplayModes();
 
 	std::atomic_bool m_shuttingDownWindow { false };
 	std::thread m_windowThread;
@@ -46,4 +55,6 @@ private:
 	wil::com_ptr<ID3D11InputLayout> m_inputLayout;
 	wil::com_ptr<ID3D11Buffer> m_vb;
 	UINT m_vbStride;
+
+	std::vector<DisplayMode> m_displayModes;
 };
