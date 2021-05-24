@@ -285,9 +285,35 @@ struct ccolor_target : public cbase_target
 {
 };
 
+struct cshader_resource_view
+{
+	ID3D11ShaderResourceView* m_pD3DShaderResourceView;
+};
+
+struct cunordered_access_view
+{
+	ID3D11UnorderedAccessView* m_pD3DUnorderedAccessView;
+};
+
+struct alignas(16) cbase_texture_native : public csurface_resource, cshader_resource_view, cunordered_access_view
+{
+};
+
+struct cbase_texture : public cbase_texture_native
+{
+};
+
+
+struct ctexture : public cbase_texture
+{
+};
+
 }
 
-struct csbgl_texture_gs {};
+struct csbgl_texture_gs : public sbgl::ctexture
+{
+};
+
 struct csbgl_staging_texture_gs {};
 struct csbgl_rw_texture_gs {};
 

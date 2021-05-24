@@ -9,7 +9,7 @@ namespace Y6
 	namespace VF5FS
 	{
 		HMODULE LoadDLL();
-		void Run(const RenderWindow& window);
-		bool GameLoop(module_func_t func);
+		void Run(RenderWindow& window);
+		bool GameLoop(module_func_t func, RenderWindow& window);
 	}
 }

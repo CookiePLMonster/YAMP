@@ -141,7 +141,7 @@ HMODULE Y6::VF5FS::LoadDLL()
 	return gameDll.get();
 }
 
-void Y6::VF5FS::Run(const RenderWindow& window)
+void Y6::VF5FS::Run(RenderWindow& window)
 {
 	const auto module_start = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_start"));
 	THROW_LAST_ERROR_IF_NULL(module_start);
@@ -227,14 +227,14 @@ void Y6::VF5FS::Run(const RenderWindow& window)
 	{
 		while (!window.IsShuttingDown())
 		{
-			if (!GameLoop(module_main)) break;
+			if (!GameLoop(module_main, window)) break;
 		}
 
 		// TODO: module_stop
 	}
 }
 
-bool Y6::VF5FS::GameLoop(module_func_t func)
+bool Y6::VF5FS::GameLoop(module_func_t func, RenderWindow& window)
 {
 	vf5fs_execute_info_t execute_info {};
 	execute_info.size_of_struct = sizeof(execute_info);
@@ -270,22 +270,12 @@ bool Y6::VF5FS::GameLoop(module_func_t func)
 	cgs_tex* display_tex = gs::sm_context->handle_tex.get(execute_info.output_texid);
 	if (display_tex == nullptr) return false;
 	if (display_tex->m_type != 2) return false;
-	cgs_rt* display_rt = display_tex->mp_rt;
 
 	// TODO: Beautify this
 	auto& swapChain = gs::sm_context->sbgl_device.m_swap_chain;
-	IDXGISwapChain* nativeSwapChain = swapChain.m_pDXGISwapChain;
-	ID3D11DeviceContext* context = gs::sm_context->p_device_context->mp_sbgl_context;
+	window.BlitGameFrame(display_tex->mp_sbgl_resource->m_pD3DShaderResourceView);
 
-	// TODO: This will need a proper Draw, for now CopyResource should work
-	wil::com_ptr<ID3D11Resource> destination;
-	HRESULT hr = nativeSwapChain->GetBuffer(0, IID_PPV_ARGS(destination.addressof()));
-	if (FAILED(hr)) return false;
-
-	ID3D11Resource* source = display_rt->mp_sbgl_resource->m_pD3DResource;
-	context->CopyResource(destination.get(), source);
-
-	hr = nativeSwapChain->Present(1, 0);
+	HRESULT hr = swapChain.m_pDXGISwapChain->Present(1, 0);
 	if (FAILED(hr)) return false;
 
 	gs::sm_context->frame_counter++;
