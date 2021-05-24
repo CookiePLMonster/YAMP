@@ -370,7 +370,7 @@ namespace
     bool _set_state_xi(unsigned int id, unsigned int *m_now, float *m_x1, float *m_y1, uint8_t* m_buttons)
     {
         XINPUT_STATE state;
-        XInputGetState(id, &state);
+        if (XInputGetState(id, &state) != ERROR_SUCCESS) return false;
 
         auto setButton = [&m_now, &m_buttons] (sl::BUTTON button) {
             *m_now |= (1 << button);

@@ -244,10 +244,6 @@ bool Y6::VF5FS::GameLoop(module_func_t func, RenderWindow& window)
 	execute_info.size_of_struct = sizeof(execute_info);
 	execute_info.p_device_context = gs::sm_context->p_device_context;
 
-	// TODO: This is needed, figure out what fields exactly cause it
-	execute_info.pad[0] = {};
-	execute_info.pad[1] = {};
-
 	// TODO: Set up mappings better
 	// They're ignored now, in-game mappings are used instead
 	/*{
