@@ -29,9 +29,8 @@ public:
 
 	void BlitGameFrame(ID3D11ShaderResourceView* src);
 
-	// TODO: Those are placeholers
-	uint32_t GetWidth() const { return 1280; }
-	uint32_t GetHeight() const { return 720; }
+	uint32_t GetWidth() const { return m_width; }
+	uint32_t GetHeight() const { return m_height; }
 
 	bool IsShuttingDown() const { return m_shuttingDownWindow.load(std::memory_order_relaxed); }
 
@@ -39,6 +38,7 @@ private:
 	wil::com_ptr<IDXGISwapChain> CreateSwapChainForWindow(ID3D11Device* device, HWND window);
 	void CreateRenderResources();
 	void EnumerateDisplayModes();
+	void CalculateViewport();
 
 	std::atomic_bool m_shuttingDownWindow { false };
 	std::thread m_windowThread;
@@ -55,6 +55,9 @@ private:
 	wil::com_ptr<ID3D11InputLayout> m_inputLayout;
 	wil::com_ptr<ID3D11Buffer> m_vb;
 	UINT m_vbStride;
+	D3D11_VIEWPORT m_viewport;
+	bool m_requiresClear = false;
 
 	std::vector<DisplayMode> m_displayModes;
+	uint32_t m_width, m_height;
 };

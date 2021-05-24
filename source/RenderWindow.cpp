@@ -38,10 +38,15 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		const ATOM windowClass = RegisterClassEx(&wndClass);
 		THROW_LAST_ERROR_IF(windowClass == 0);
 
-		RECT clientArea { 0, 0, 1280, 720 };
-		AdjustWindowRect(&clientArea, WS_OVERLAPPEDWINDOW, FALSE);
+		// TODO: Read options
+		DWORD style = WS_OVERLAPPEDWINDOW;
+		m_width = 1280;
+		m_height = 720;
 
-		wil::unique_hwnd window(CreateWindowExW(0, L"YAKUZA_VF5FS", L"Virtua Fighter 5: Final Showdown", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT,
+		RECT clientArea { 0, 0, m_width, m_height };
+		AdjustWindowRect(&clientArea, style, FALSE);
+
+		wil::unique_hwnd window(CreateWindowExW(0, L"YAKUZA_VF5FS", L"Virtua Fighter 5: Final Showdown", style, CW_USEDEFAULT, CW_USEDEFAULT,
 			clientArea.right - clientArea.left, clientArea.bottom - clientArea.top, nullptr, nullptr, instance, nullptr));
 		THROW_LAST_ERROR_IF_NULL(window);
 
@@ -70,6 +75,7 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 
 		CreateRenderResources();
 		EnumerateDisplayModes();
+		CalculateViewport();
 		startupEvent.SetEvent();
 
 		BOOL ret;
@@ -103,6 +109,12 @@ RenderWindow::~RenderWindow()
 
 void RenderWindow::BlitGameFrame(ID3D11ShaderResourceView* src)
 {
+	if (m_requiresClear)
+	{
+		const FLOAT clearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+		m_deviceContext->ClearRenderTargetView(m_backBufferRTV.get(), clearColor);
+	}
+
 	m_deviceContext->OMSetRenderTargets(1, m_backBufferRTV.addressof(), nullptr);
 	m_deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
@@ -116,14 +128,7 @@ void RenderWindow::BlitGameFrame(ID3D11ShaderResourceView* src)
 	m_deviceContext->PSSetShader(m_ps.get(), nullptr, 0);
 	m_deviceContext->PSSetShaderResources(0, 1, &src);
 
-	D3D11_VIEWPORT viewport;
-	viewport.TopLeftX = 0;
-	viewport.TopLeftY = 0;
-	viewport.Width = GetWidth();
-	viewport.Height = GetHeight();
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-	m_deviceContext->RSSetViewports(1, &viewport);
+	m_deviceContext->RSSetViewports(1, &m_viewport);
 	m_deviceContext->RSSetState(nullptr);
 
 	m_deviceContext->Draw(3, 0);
@@ -444,4 +449,35 @@ void RenderWindow::EnumerateDisplayModes()
 	std::sort(m_displayModes.begin(), m_displayModes.end(), [](const DisplayMode& left, const DisplayMode& right) {
 		return std::tie(left.Width, left.Height, left.RefreshRate) < std::tie(right.Width, right.Height, right.RefreshRate);
 	});
+}
+
+void RenderWindow::CalculateViewport()
+{
+	constexpr float gameAR = 1280.0f / 720.0f;
+	const float windowAR = static_cast<float>(m_width) / m_height;
+	if (gameAR >= windowAR)
+	{
+		// Letterbox - or nothing, if window is precisely 16:9
+		const UINT targetHeight = static_cast<UINT>(m_width / gameAR);
+
+		m_viewport.TopLeftX = 0;
+		m_viewport.TopLeftY = (m_height - targetHeight) / 2;
+		m_viewport.Width = m_width;
+		m_viewport.Height = targetHeight;
+	}
+	else
+	{
+		// Pillarbox
+		const UINT targetWidth = static_cast<UINT>(m_height * gameAR);
+
+		m_viewport.TopLeftX = (m_width - targetWidth) / 2;
+		m_viewport.TopLeftY = 0;
+		m_viewport.Width = targetWidth;
+		m_viewport.Height = m_height;
+	}
+
+	m_viewport.MinDepth = 0.0f;
+	m_viewport.MaxDepth = 1.0f;
+
+	m_requiresClear = m_viewport.TopLeftX != 0 || m_viewport.TopLeftY != 0;
 }
