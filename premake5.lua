@@ -34,7 +34,7 @@ filter "configurations:Debug"
 	runtime "Debug"
 
  filter "configurations:Master"
-	defines { "NDEBUG" }
+	defines { "NDEBUG", "RESULT_DIAGNOSTICS_LEVEL=0", "RESULT_INCLUDE_CALLER_RETURNADDRESS=0" }
 	symbols "Off"
 
 filter "configurations:not Debug"
