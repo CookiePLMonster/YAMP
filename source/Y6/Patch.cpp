@@ -10,6 +10,7 @@
 
 #include "Imports.h"
 #include "sys_util.h"
+#include "cs_game.h"
 
 void PatchSl(sl::context_t* context)
 {
@@ -176,6 +177,18 @@ void Patch_SysUtil(void* dll)
 		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_IS_ENTER_CIRCLE_PATCH))
 		{
 			Memory::VP::InjectHook(addr, sys_util_circle_enter);
+		}
+	}
+}
+
+void Patch_CsGame(void* dll)
+{
+	Trampoline* hop = Trampoline::MakeTrampoline(dll);
+	{
+		void* dest_autoload = hop->Jump(&dest_cs_autoload);
+		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::DEST_CS_AUTOLOAD_PATCH))
+		{
+			Memory::VP::Patch(addr, dest_autoload);
 		}
 	}
 }

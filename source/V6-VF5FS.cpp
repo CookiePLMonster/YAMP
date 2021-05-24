@@ -11,6 +11,7 @@
 #include "Y6/Imports.h"
 #include "Y6/Patch.h"
 #include "Y6/sys_util.h"
+#include "Y6/cs_game.h"
 
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
@@ -96,6 +97,8 @@ static void ImportFunctions(HMODULE dll)
 	Import(cgs_device_context::reset_state_all_internal, Symbol::DEVICE_CONTEXT_RESET_STATE_ALL);
 	Import(gs::vb_create, Symbol::VB_CREATE);
 	Import(gs::ib_create, Symbol::IB_CREATE);
+	Import(shift_next_mode, Symbol::SHIFT_NEXT_MODE);
+	Import(shift_next_mode_sub, Symbol::SHIFT_NEXT_MODE_SUB);
 }
 
 static void PrefillVariables(HMODULE dll, const RenderWindow& window)
@@ -164,6 +167,7 @@ void Y6::VF5FS::Run(RenderWindow& window)
 
 	// Misc patches - bugfixes, un-folding no-ops etc
 	Patch_Misc(gameDll.get());
+	Patch_CsGame(gameDll.get());
 
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);

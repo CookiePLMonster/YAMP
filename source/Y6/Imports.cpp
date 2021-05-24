@@ -60,6 +60,13 @@ void* GetImportedFunction(void* lib, Symbol symbol)
 		symbolAddr = 0x18000EDE0;
 		break;
 
+	case Symbol::SHIFT_NEXT_MODE:
+		symbolAddr = 0x1800ED7B0;
+		break;
+	case Symbol::SHIFT_NEXT_MODE_SUB:
+		symbolAddr = 0x1800ED7D0;
+		break;
+
 	// Debug only
 	case Symbol::TRAP_ALLOC_INSTANCE_TBL:
 		symbolAddr = 0x180010833;
@@ -106,6 +113,9 @@ std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol)
 		break;
 	case Symbol::CS_SWITCH_MAPPING_OVERRIDE_PATCH:
 		result = { (void*)0x1801AAC1D, (void*)0x1801AAC33, (void*)0x1801AAC49, (void*)0x1801AAC5F, (void*)0x1801AAC75, (void*)0x1801AAC8B, (void*)0x1801AACA1, (void*)0x1801AACBA };
+		break;
+	case Symbol::DEST_CS_AUTOLOAD_PATCH:
+		result = { (void*)0x1802946A8 };
 		break;
 	default:
 		assert(!"Unreachable!");
