@@ -124,6 +124,7 @@ void RenderWindow::BlitGameFrame(ID3D11ShaderResourceView* src)
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 	m_deviceContext->RSSetViewports(1, &viewport);
+	m_deviceContext->RSSetState(nullptr);
 
 	m_deviceContext->Draw(3, 0);
 }
@@ -396,8 +397,8 @@ void RenderWindow::CreateRenderResources()
 			XMFLOAT2 Position;
 			XMFLOAT2 Texcoord0;
 		} vertexBuffer[] = {
-			{ XMFLOAT2(-1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f) },
 			{ XMFLOAT2(-1.0f, -3.0f), XMFLOAT2(0.0f, 2.0f) },
+			{ XMFLOAT2(-1.0f, 1.0f), XMFLOAT2(0.0f, 0.0f) },
 			{ XMFLOAT2(3.0f, 1.0f), XMFLOAT2(2.0f, 0.0f) },
 		};
 		D3D11_BUFFER_DESC desc;
