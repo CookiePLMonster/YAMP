@@ -7,6 +7,7 @@
 #include "wil/com.h"
 #include "wil/resource.h"
 
+#include <atomic>
 #include <thread>
 #include <vector>
 
