@@ -147,6 +147,22 @@ void RenderWindow::BlitGameFrame(ID3D11ShaderResourceView* src)
 	m_deviceContext->Draw(3, 0);
 }
 
+void RenderWindow::NewImGuiFrame()
+{
+	ImGui_ImplDX11_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+}
+
+void RenderWindow::RenderImGui()
+{
+	ImGui::ShowDemoWindow();
+	m_ui.Draw();
+
+	ImGui::Render();
+	ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+}
+
 wil::com_ptr<IDXGISwapChain> RenderWindow::CreateSwapChainForWindow(ID3D11Device* device, HWND window)
 {
 	wil::com_ptr<IDXGISwapChain> swapChain;
@@ -451,17 +467,21 @@ void RenderWindow::EnumerateDisplayModes()
 
 	auto displayModes = std::make_unique<DXGI_MODE_DESC[]>(numModes);
 	output->GetDisplayModeList(OUTPUT_FORMAT, 0, &numModes, displayModes.get());
+
+	std::vector<std::tuple<uint32_t, uint32_t, float>> displayModesVector;
 	for (const auto& mode : wil::make_range(displayModes.get(), numModes))
 	{
 		if (mode.ScanlineOrdering != DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE || mode.Scaling != DXGI_MODE_SCALING_UNSPECIFIED) continue;
 
-		m_displayModes.push_back({mode.Width, mode.Height, static_cast<float>(mode.RefreshRate.Numerator) / mode.RefreshRate.Denominator});
+		displayModesVector.push_back({mode.Width, mode.Height, static_cast<float>(mode.RefreshRate.Numerator) / mode.RefreshRate.Denominator});
 	}
 
 	// Refresh rates seem to be unsorted, fix it
-	std::sort(m_displayModes.begin(), m_displayModes.end(), [](const DisplayMode& left, const DisplayMode& right) {
-		return std::tie(left.Width, left.Height, left.RefreshRate) < std::tie(right.Width, right.Height, right.RefreshRate);
-	});
+	std::sort(displayModesVector.begin(), displayModesVector.end());
+	for (const auto& mode : displayModesVector)
+	{
+		m_ui.AddResolution(std::get<0>(mode), std::get<1>(mode), std::get<2>(mode));
+	}
 }
 
 void RenderWindow::CalculateViewport()

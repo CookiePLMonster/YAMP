@@ -1,5 +1,7 @@
 #pragma once
 
+#include "YAMPUserInterface.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <d3d11.h>
@@ -15,12 +17,6 @@
 class RenderWindow
 {
 public:
-	struct DisplayMode
-	{
-		uint32_t Width, Height;
-		float RefreshRate;
-	};
-
 	RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdShow);
 	~RenderWindow();
 
@@ -29,6 +25,9 @@ public:
 	IDXGISwapChain* GetSwapChain() const { return m_swapChain.get(); }
 
 	void BlitGameFrame(ID3D11ShaderResourceView* src);
+
+	void NewImGuiFrame();
+	void RenderImGui();
 
 	uint32_t GetWidth() const { return m_width; }
 	uint32_t GetHeight() const { return m_height; }
@@ -59,6 +58,7 @@ private:
 	D3D11_VIEWPORT m_viewport;
 	bool m_requiresClear = false;
 
-	std::vector<DisplayMode> m_displayModes;
 	uint32_t m_width, m_height;
+
+	YAMPUserInterface m_ui;
 };
