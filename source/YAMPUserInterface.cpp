@@ -9,36 +9,49 @@
 
 void YAMPUserInterface::Draw()
 {
-	const ImVec2& displaySize = ImGui::GetIO().DisplaySize;
-
-	ImGui::SetNextWindowPos({ displaySize.x / 2.0f, displaySize.y / 2.0f }, ImGuiCond_Once, { 0.5f, 0.5f });
-	ImGui::SetNextWindowSize({ 600.0f, 600.0f }, ImGuiCond_Once);
-
-	// Main YAME window
-	static bool yame_settings_open = true;
-	{
-		static bool keyDown = false;
-		if (GetAsyncKeyState(VK_F1) & 0x8000)
-		{
-			if (!keyDown)
-			{
-				keyDown = true;
-				yame_settings_open = !yame_settings_open;
-			}
-		}
-		else
-		{
-			keyDown = false;
-		}
-	}
-	if (!yame_settings_open)
+	if (!ProcessF1Key())
 	{
 		return;
 	}
 
-	if (ImGui::Begin("YAMP Settings", &yame_settings_open, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
+	const ImVec2& displaySize = ImGui::GetIO().DisplaySize;
+	ImGui::SetNextWindowPos({ displaySize.x / 2.0f, displaySize.y / 2.0f }, ImGuiCond_Once, { 0.5f, 0.5f });
+	ImGui::SetNextWindowSize({ 600.0f, 600.0f }, ImGuiCond_Once);
+
+	if (ImGui::Begin("YAMP Settings", &m_settingsOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 	{
-		DrawGraphics();
+		// Helper variables
+		int graphics_id;
+		int debug_id;
+		int about_id;
+
+		static int selectedTab = 0;
+		ImGui::BeginChild("##left", ImVec2(150, 0), true);
+		{
+			auto settingsSection = [](const char* label, int index)
+			{
+				if (ImGui::Selectable(label, selectedTab == index))
+				{
+					selectedTab = index;
+				}
+				return index;
+			};
+
+			int index = 0;
+			graphics_id = settingsSection("Graphics", index++);
+			debug_id = settingsSection("Debug", index++);
+			about_id = settingsSection("About", index++);
+
+			ImGui::EndChild();
+		}
+
+		ImGui::SameLine();
+
+		ImGui::BeginChild("##right");
+		{
+			if (selectedTab == graphics_id) DrawGraphics();
+		}
+		ImGui::EndChild();
 
 	}
 	ImGui::End();
@@ -66,9 +79,6 @@ void YAMPUserInterface::AddResolution(uint32_t width, uint32_t height, float ref
 
 void YAMPUserInterface::DrawGraphics()
 {
-	if (!ImGui::CollapsingHeader("Graphics"))
-		return;
-
 	ImGuiStyle& style = ImGui::GetStyle();
 	float w = ImGui::CalcItemWidth();
 	float spacing = style.ItemInnerSpacing.x;
@@ -151,4 +161,23 @@ void YAMPUserInterface::DrawGraphics()
 		ImGui::SameLine(0, style.ItemInnerSpacing.x);
 		ImGui::Text("Refresh Rate");
 	}
+}
+
+bool YAMPUserInterface::ProcessF1Key()
+{
+	static bool keyDown = false;
+	if (GetAsyncKeyState(VK_F1) & 0x8000)
+	{
+		if (!keyDown)
+		{
+			keyDown = true;
+			m_settingsOpen = !m_settingsOpen;
+		}
+	}
+	else
+	{
+		keyDown = false;
+	}
+
+	return m_settingsOpen;
 }

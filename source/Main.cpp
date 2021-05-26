@@ -22,6 +22,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
 	HMODULE dll = Y6::VF5FS::LoadDLL();
+	Y6::VF5FS::PreInitialize();
 
 	RenderWindow window(hInstance, dll, nShowCmd);
 

@@ -15,6 +15,8 @@ public:
 private:
 	void DrawGraphics();
 
+	bool ProcessF1Key();
+
 private:
 	struct Resolution
 	{
@@ -32,4 +34,5 @@ private:
 	std::vector<Resolution> m_resolutions;
 	size_t m_currentResolutionIndex = 0;
 	size_t m_currentRefRateIndex = 0;
+	bool m_settingsOpen = false;
 };

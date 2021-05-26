@@ -1,9 +1,8 @@
 #include "sys_util.h"
 
 #include "sl.h"
+#include "../YAMPGeneral.h"
 
-#include <ShlObj.h>
-#include <filesystem>
 #include "../wil/resource.h"
 
 namespace fs = std::filesystem;
@@ -17,20 +16,6 @@ struct sys_util_save_header
 	uint32_t size;
 };
 static_assert(sizeof(sys_util_save_header) == 16);
-
-static fs::path s_path_to_systemdata;
-void sys_util_init_storage_directory()
-{
-	// TODO: Allow for portable mode
-	wil::unique_cotaskmem_string str;
-	if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_DEFAULT, nullptr, str.addressof())))
-	{
-		s_path_to_systemdata = str.get();
-		s_path_to_systemdata.append(u8"Sega");
-		s_path_to_systemdata.append(u8"Virtua Fighter 5 Final Showdown");
-	}
-}
-
 
 bool sys_util_check_enable_storage(int port)
 {
@@ -48,7 +33,7 @@ void sys_util_start_load_systemdata_task(int port, void* buf, unsigned int buf_s
 
 	// TODO: Do we need to use the port parameter?
 	// TODO: Should we call the callback if 'create' is set to off and the file doesn't exist?
-	const auto utf8PathToFile = (s_path_to_systemdata / SAVE_FILE_NAME).u8string();
+	const auto utf8PathToFile = (gGeneral.GetDataPath() / SAVE_FILE_NAME).u8string();
 	sl::handle_t file = create ? sl::file_create(utf8PathToFile.c_str()) : sl::file_open(utf8PathToFile.c_str());
 	if (file == sl::INVALID_HANDLE) return;
 
@@ -74,9 +59,9 @@ void sys_util_start_save_systemdata_task(int port, const void* buf, unsigned int
 
 	// Create the entire directory structure if needed
 	std::error_code ec;
-	if (!fs::create_directories(s_path_to_systemdata, ec)) return;
+	if (!fs::create_directories(gGeneral.GetDataPath(), ec)) return;
 
-	const auto utf8PathToFile = (s_path_to_systemdata / SAVE_FILE_NAME).u8string();
+	const auto utf8PathToFile = (gGeneral.GetDataPath() / SAVE_FILE_NAME).u8string();
 	sl::handle_t file = sl::file_create(utf8PathToFile.c_str());
 	if (file == sl::INVALID_HANDLE) return;
 

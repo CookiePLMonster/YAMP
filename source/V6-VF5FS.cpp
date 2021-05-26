@@ -13,6 +13,8 @@
 #include "Y6/sys_util.h"
 #include "Y6/cs_game.h"
 
+#include "YAMPGeneral.h"
+
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
 // Contexts
@@ -144,6 +146,11 @@ HMODULE Y6::VF5FS::LoadDLL()
 	return gameDll.get();
 }
 
+void Y6::VF5FS::PreInitialize()
+{
+	gGeneral.SetDataPath(u8"Sega", u8"Virtua Fighter 5 Final Showdown");
+}
+
 void Y6::VF5FS::Run(RenderWindow& window)
 {
 	const auto module_start = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_start"));
@@ -171,8 +178,6 @@ void Y6::VF5FS::Run(RenderWindow& window)
 
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);
-
-	sys_util_init_storage_directory();
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;
