@@ -6,6 +6,8 @@
 
 #include <algorithm>
 
+#include "../wil/resource.h"
+
 #pragma comment(lib, "xinput.lib")
 
 namespace sl {
@@ -367,10 +369,29 @@ void mutex_t::unlock()
 
 namespace
 {
+    // TODO: Beautify
+    static decltype(XInputGetState)* getXInputGetState()
+    {
+        HMODULE xinputLib = LoadLibraryW(L"xinput1_3");
+        if (xinputLib == nullptr)
+        {
+            xinputLib = LoadLibraryW(L"xinput1_4");
+        }
+        if (xinputLib == nullptr)
+        {
+            xinputLib = LoadLibraryW(L"xinput9_1_0");
+        }
+
+        THROW_LAST_ERROR_IF_NULL(xinputLib);
+        return reinterpret_cast<decltype(XInputGetState)*>(GetProcAddress(xinputLib, "XInputGetState"));
+    }
+
     bool _set_state_xi(unsigned int id, unsigned int *m_now, float *m_x1, float *m_y1, uint8_t* m_buttons)
     {
+        static const auto getStateFunc = getXInputGetState();
+
         XINPUT_STATE state;
-        if (XInputGetState(id, &state) != ERROR_SUCCESS) return false;
+        if (getStateFunc(id, &state) != ERROR_SUCCESS) return false;
 
         auto setButton = [&m_now, &m_buttons] (sl::BUTTON button) {
             *m_now |= (1 << button);
