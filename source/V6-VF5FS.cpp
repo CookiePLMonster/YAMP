@@ -168,6 +168,28 @@ void Y6::VF5FS::PreInitialize()
 	gGeneral.LoadSettings();
 }
 
+static void CheckForExecutable()
+{
+	// TODO: Make more graceful instead of killing the app
+	const std::wstring executablePath = (gamePath.parent_path() / L"Yakuza6.exe").native();
+
+	// We'll consider the file valid if it has MZ and PE magic values
+	wil::unique_hfile file(CreateFileW(executablePath.c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, nullptr));
+	FAIL_FAST_IMMEDIATE_IF(!file);
+
+	wil::unique_handle fileMapping(CreateFileMapping(file.get(), nullptr, PAGE_READONLY, 0, 0, nullptr));
+	FAIL_FAST_IMMEDIATE_IF_NULL(fileMapping);
+
+	wil::unique_mapview_ptr<IMAGE_DOS_HEADER> dosHeaderView(static_cast<PIMAGE_DOS_HEADER>(MapViewOfFile(fileMapping.get(), FILE_MAP_READ, 0, 0, 0)));
+	FAIL_FAST_IMMEDIATE_IF_NULL(dosHeaderView);
+
+	FAIL_FAST_IMMEDIATE_IF(dosHeaderView->e_magic != 'ZM');
+
+	PIMAGE_NT_HEADERS64 peHeaderView = reinterpret_cast<PIMAGE_NT_HEADERS64>(reinterpret_cast<char*>(dosHeaderView.get()) + dosHeaderView->e_lfanew);
+
+	FAIL_FAST_IMMEDIATE_IF(peHeaderView->Signature != 'EP');
+}
+
 void Y6::VF5FS::Run(RenderWindow& window)
 {
 	const auto module_start = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_start"));
@@ -175,6 +197,8 @@ void Y6::VF5FS::Run(RenderWindow& window)
 	const auto module_stop = reinterpret_cast<module_func_t>(GetProcAddress(gameDll.get(), "module_stop"));
 	THROW_LAST_ERROR_IF_NULL(module_stop);
 	module_func_t module_main;
+
+	CheckForExecutable();
 
 	// Patch up structures and do post-DllMain work here
 	// Saves having to reimplement all the complex constructors and data types
