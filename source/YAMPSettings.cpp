@@ -44,6 +44,8 @@ void YAMPSettings::LoadSettings(const std::filesystem::path& dirPath)
 		{
 			return;
 		}
+
+		m_buildLastShowedDisclaimer = GetPrivateProfileIntW(SECTION_NAME, L"Disclaimer", 0, iniPath.c_str());
 	}
 
 	{
@@ -80,6 +82,7 @@ void YAMPSettings::SaveSettings(const std::filesystem::path& dirPath)
 	{
 		const wchar_t* SECTION_NAME = L"General";
 		WritePrivateProfileIntW(SECTION_NAME, L"Version", SETTINGS_VERSION, iniPath.c_str());
+		WritePrivateProfileIntW(SECTION_NAME, L"Disclaimer", m_buildLastShowedDisclaimer, iniPath.c_str());
 	}
 
 	{

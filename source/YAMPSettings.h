@@ -20,4 +20,7 @@ public:
 	bool m_arcadeMode = false;
 	bool m_circleConfirm = false;
 	uint32_t m_language = 1; // English
+
+	// Misc
+	uint32_t m_buildLastShowedDisclaimer = 0;
 };

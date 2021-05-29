@@ -18,6 +18,8 @@ private:
 	void DrawGame();
 	bool DrawSettingsConfirmation();
 
+	void DrawDisclaimer();
+
 	bool ProcessF1Key();
 
 	void ApplySettings();

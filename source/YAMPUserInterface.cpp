@@ -33,6 +33,11 @@ namespace ImGuiCustom
 
 void YAMPUserInterface::Draw()
 {
+	if (gGeneral.GetSettings()->m_buildLastShowedDisclaimer < rsc_RevisionID)
+	{
+		DrawDisclaimer();
+	}
+
 	if (!ProcessF1Key())
 	{
 		return;
@@ -110,7 +115,7 @@ void YAMPUserInterface::Draw()
 
 		if (m_showRestartWarning)
 		{
-			ImGui::TextColored({ 1.000f, 0.600f, 0.000f, 1.000f }, "YAMP needs to be restarted for the new settings\nto take effect.");
+			ImGui::TextColored({ 1.000f, 1.000f, 0.000f, 1.000f }, "YAMP needs to be restarted for the new settings\nto take effect.");
 		}
 
 		if (drawButtons)
@@ -364,6 +369,45 @@ bool YAMPUserInterface::DrawSettingsConfirmation()
 	}
 
 	return result;
+}
+
+void YAMPUserInterface::DrawDisclaimer()
+{
+	// Show disclaimer for 20 seconds from the time it's first called
+	static const auto displayStartTime = std::chrono::system_clock::now();
+	if (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now() - displayStartTime) >= std::chrono::seconds(20))
+	{
+		auto token = gGeneral.GetSettingsUpdateToken();
+		auto* settings = token.first;
+
+		settings->m_buildLastShowedDisclaimer = rsc_RevisionID;
+	}
+
+	const ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings
+		| ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoMove;
+
+	ImGui::SetNextWindowPos({ 10.0f, 10.0f }, ImGuiCond_Always);
+	ImGui::SetNextWindowBgAlpha(0.75f);
+
+	if (ImGui::Begin("##disclaimer", nullptr, windowFlags))
+	{
+#define STRINGIZE(s) STRINGIZE2(s)
+#define STRINGIZE2(s) #s
+
+		ImGui::TextUnformatted("Welcome to Yakuza Arcade Machines Player (Build " STRINGIZE(rsc_RevisionID) ").");
+		ImGui::NewLine();
+
+		ImGui::TextColored({ 1.000f, 1.000f, 0.000f, 1.000f }, "DISCLAIMER: Yakuza Arcade Machines Player does not redistribute ANY copyrighted files.\n"
+			"You must own an original Steam copy of Yakuza 6: The Song of Life to play games via YAMP.\n"
+			"Pirated game copies WILL NOT receive any support.");
+
+		ImGui::NewLine();
+		ImGui::TextUnformatted("All rights to Virtua Fighter 5: Final Showdown belong to SEGA.");
+
+#undef STRINGIZE
+#undef STRINGIZE2
+	}
+	ImGui::End();
 }
 
 bool YAMPUserInterface::ProcessF1Key()
