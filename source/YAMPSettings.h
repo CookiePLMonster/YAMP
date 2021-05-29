@@ -12,4 +12,5 @@ public:
 	uint32_t m_resX = 1280;
 	uint32_t m_resY = 720;
 	float m_refreshRate = 60.0f;
+	bool m_fullscreen = false;
 };

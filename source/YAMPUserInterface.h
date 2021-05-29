@@ -37,10 +37,12 @@ private:
 	};
 
 	std::vector<Resolution> m_resolutions;
+
+	// Current settings
 	size_t m_currentResolutionIndex = 0;
 	size_t m_currentRefRateIndex = 0;
-	bool m_settingsOpen = false;
+	bool m_currentFullscreen = false;
 
 	// Volatile state
-	bool m_pageModified = false, m_showRestartWarning = false;
+	bool m_settingsOpen = false, m_pageModified = false, m_showRestartWarning = false;
 };

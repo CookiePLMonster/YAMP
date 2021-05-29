@@ -58,6 +58,8 @@ void YAMPSettings::LoadSettings(const std::filesystem::path& dirPath)
 		{
 			m_refreshRate = refRate;
 		}
+
+		m_fullscreen = GetPrivateProfileIntW(SECTION_NAME, L"Fullscreen", 0, iniPath.c_str()) != 0;
 	}
 }
 
@@ -73,5 +75,7 @@ void YAMPSettings::SaveSettings(const std::filesystem::path& dirPath)
 		WritePrivateProfileIntW(SECTION_NAME, L"ResolutionY", m_resY, iniPath.c_str());
 	
 		WritePrivateProfileFloatW(SECTION_NAME, L"RefreshRate", m_refreshRate, iniPath.c_str());
+
+		WritePrivateProfileIntW(SECTION_NAME, L"Fullscreen", m_fullscreen, iniPath.c_str());
 	}
 }

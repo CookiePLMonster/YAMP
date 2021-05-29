@@ -51,9 +51,22 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 
 		const YAMPSettings* settings = gGeneral.GetSettings();
 
-		DWORD style = WS_OVERLAPPEDWINDOW;
-		m_width = settings->m_resX;
-		m_height = settings->m_resY;
+		DWORD style;
+		if (settings->m_fullscreen) // Borderless for now
+		{
+			style = WS_POPUP;
+
+			RECT desktop;
+			GetWindowRect(GetDesktopWindow(), &desktop);
+			m_width = desktop.right - desktop.left;
+			m_height = desktop.bottom - desktop.top;
+		}
+		else
+		{
+			style = WS_OVERLAPPEDWINDOW;
+			m_width = settings->m_resX;
+			m_height = settings->m_resY;
+		}
 
 		RECT clientArea { 0, 0, m_width, m_height };
 		AdjustWindowRect(&clientArea, style, FALSE);

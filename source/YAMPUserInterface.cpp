@@ -168,6 +168,8 @@ void YAMPUserInterface::GetDefaultsFromSettings()
 			m_currentRefRateIndex = std::distance(res->refreshRates.begin(), refRate);
 		}
 	}
+
+	m_currentFullscreen = settings->m_fullscreen;
 }
 
 void YAMPUserInterface::DrawGraphics()
@@ -214,7 +216,7 @@ void YAMPUserInterface::DrawGraphics()
 			if (++m_currentResolutionIndex >= m_resolutions.size())
 				m_currentResolutionIndex = 0;
 		}
-		ImGui::SameLine(0, style.ItemInnerSpacing.x);
+		ImGui::SameLine(0, spacing);
 		ImGui::Text("Resolution");
 	}
 	{
@@ -257,8 +259,13 @@ void YAMPUserInterface::DrawGraphics()
 			if (++m_currentRefRateIndex >= currentRes.refreshRates.size())
 				m_currentRefRateIndex = 0;
 		}
-		ImGui::SameLine(0, style.ItemInnerSpacing.x);
+		ImGui::SameLine(0, spacing);
 		ImGui::Text("Refresh Rate");
+
+		if (ImGui::Checkbox("Fullscreen", &m_currentFullscreen))
+		{
+			m_pageModified = true;
+		}
 	}
 }
 
@@ -321,6 +328,7 @@ void YAMPUserInterface::ApplySettings()
 	settings->m_resX = m_resolutions[m_currentResolutionIndex].width;
 	settings->m_resY = m_resolutions[m_currentResolutionIndex].height;
 	settings->m_refreshRate = m_resolutions[m_currentResolutionIndex].refreshRates[m_currentRefRateIndex].refreshRate;
+	settings->m_fullscreen = m_currentFullscreen;
 
 	m_pageModified = false;
 	m_showRestartWarning = true;
