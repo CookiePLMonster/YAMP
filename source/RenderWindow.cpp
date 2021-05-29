@@ -10,6 +10,8 @@
 
 #include <algorithm>
 
+#include "YAMPGeneral.h"
+
 #pragma comment(lib, "d3d11.lib")
 
 static constexpr DXGI_FORMAT OUTPUT_FORMAT = DXGI_FORMAT_B8G8R8A8_UNORM;
@@ -47,10 +49,11 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		const ATOM windowClass = RegisterClassEx(&wndClass);
 		THROW_LAST_ERROR_IF(windowClass == 0);
 
-		// TODO: Read options
+		const YAMPSettings* settings = gGeneral.GetSettings();
+
 		DWORD style = WS_OVERLAPPEDWINDOW;
-		m_width = 1280;
-		m_height = 720;
+		m_width = settings->m_resX;
+		m_height = settings->m_resY;
 
 		RECT clientArea { 0, 0, m_width, m_height };
 		AdjustWindowRect(&clientArea, style, FALSE);
@@ -89,6 +92,8 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		CreateRenderResources();
 		EnumerateDisplayModes();
 		CalculateViewport();
+
+		m_ui.GetDefaultsFromSettings();
 		startupEvent.SetEvent();
 
 		BOOL ret;
@@ -167,9 +172,11 @@ wil::com_ptr<IDXGISwapChain> RenderWindow::CreateSwapChainForWindow(ID3D11Device
 {
 	wil::com_ptr<IDXGISwapChain> swapChain;
 
+	float refreshRate = gGeneral.GetSettings()->m_refreshRate;
+
 	DXGI_SWAP_CHAIN_DESC swapChainDesc {};
-	swapChainDesc.BufferDesc.RefreshRate.Numerator = 60;
-	swapChainDesc.BufferDesc.RefreshRate.Denominator = 1;
+	swapChainDesc.BufferDesc.RefreshRate.Numerator = static_cast<UINT>(refreshRate * 10000);
+	swapChainDesc.BufferDesc.RefreshRate.Denominator = 10000;
 	swapChainDesc.BufferDesc.Format = OUTPUT_FORMAT;
 	swapChainDesc.SampleDesc.Count = 1;                             
 	swapChainDesc.SampleDesc.Quality = 0;
@@ -472,6 +479,9 @@ void RenderWindow::EnumerateDisplayModes()
 	for (const auto& mode : wil::make_range(displayModes.get(), numModes))
 	{
 		if (mode.ScanlineOrdering != DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE || mode.Scaling != DXGI_MODE_SCALING_UNSPECIFIED) continue;
+
+		// We don't want resolutions smaller than 800x600, as the settings window is 600x600
+		if (mode.Width < 800 || mode.Height < 600) continue;
 
 		displayModesVector.push_back({mode.Width, mode.Height, static_cast<float>(mode.RefreshRate.Numerator) / mode.RefreshRate.Denominator});
 	}

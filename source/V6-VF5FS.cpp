@@ -149,6 +149,7 @@ HMODULE Y6::VF5FS::LoadDLL()
 void Y6::VF5FS::PreInitialize()
 {
 	gGeneral.SetDataPath(u8"Sega", u8"Virtua Fighter 5 Final Showdown");
+	gGeneral.LoadSettings();
 }
 
 void Y6::VF5FS::Run(RenderWindow& window)

@@ -11,11 +11,16 @@ public:
 
 	void Draw();
 	void AddResolution(uint32_t width, uint32_t height, float refreshRate);
+	void GetDefaultsFromSettings();
 
 private:
 	void DrawGraphics();
+	bool DrawSettingsConfirmation();
 
 	bool ProcessF1Key();
+
+	void ApplySettings();
+	void DiscardSettings();
 
 private:
 	struct Resolution
@@ -35,4 +40,7 @@ private:
 	size_t m_currentResolutionIndex = 0;
 	size_t m_currentRefRateIndex = 0;
 	bool m_settingsOpen = false;
+
+	// Volatile state
+	bool m_pageModified = false, m_showRestartWarning = false;
 };
