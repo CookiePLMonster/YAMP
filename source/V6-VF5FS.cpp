@@ -137,12 +137,28 @@ static void InjectTraps(HMODULE dll)
 #endif
 }
 
+// TODO: Move elsewhere
+static std::filesystem::path gamePath;
+
 static wil::unique_hmodule gameDll;
 HMODULE Y6::VF5FS::LoadDLL()
 {
 	// TODO: Clean up
-	gameDll.reset(LoadLibraryW(DLL_NAME));
-	THROW_LAST_ERROR_IF_NULL(gameDll);
+	{
+		DWORD dwSize = GetCurrentDirectoryW(0, nullptr);
+		auto buf = std::make_unique<wchar_t[]>(dwSize);
+		GetCurrentDirectoryW(dwSize, buf.get());
+		gamePath.assign(buf.get());
+	}
+
+	gameDll.reset(LoadLibraryW((gamePath / DLL_NAME).c_str()));
+	if (gameDll == nullptr)
+	{
+		// Try loading from a subdirectory
+		gamePath.append(L"vf5fs");
+		gameDll.reset(LoadLibraryW((gamePath / DLL_NAME).c_str()));
+		THROW_LAST_ERROR_IF_NULL(gameDll);
+	}
 	return gameDll.get();
 }
 
@@ -211,17 +227,20 @@ void Y6::VF5FS::Run(RenderWindow& window)
 		const gs_module_t* gs_module;
 		const ct_module_t* ct_module;
 		const icri* cri_ptr;
-		const char* root_path = ".";
+		const char* root_path;
 		module_func_t* module_main;
 		vf5fs_game_config_t config {};
 	} params;
 	static_assert(sizeof(params) == 64);
+
+	const std::string utf8Path = gamePath.u8string();
 
 	params.sl_module = &sl_module;
 	params.gs_module = &gs_module;
 	params.ct_module = &ct_module;
 	params.cri_ptr = &criware_stub;
 	params.module_main = &module_main;
+	params.root_path = utf8Path.c_str();
 
 	const auto* settings = gGeneral.GetSettings();
 
