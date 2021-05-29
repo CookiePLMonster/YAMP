@@ -157,8 +157,14 @@ HMODULE Y6::VF5FS::LoadDLL()
 		// Try loading from a subdirectory
 		gamePath.append(L"vf5fs");
 		gameDll.reset(LoadLibraryW((gamePath / DLL_NAME).c_str()));
-		THROW_LAST_ERROR_IF_NULL(gameDll);
 	}
+
+	if (!gameDll)
+	{
+		const std::wstring str(L"Could not load " + std::wstring(DLL_NAME) + L".dll!\n\nMake sure that YAMP.exe is located in your Yakuza 6: The Song of Life directory or its \"vf5fs\" subdirectory, next to the DLL file.");
+		MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR|MB_OK);
+	}
+
 	return gameDll.get();
 }
 

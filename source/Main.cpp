@@ -22,6 +22,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
 
 	HMODULE dll = Y6::VF5FS::LoadDLL();
+	if (dll == nullptr)
+	{
+		// TODO: Show a native error message about game DLL not found
+		return -1;
+	}
+
 	Y6::VF5FS::PreInitialize();
 
 	RenderWindow window(hInstance, dll, nShowCmd);
