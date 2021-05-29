@@ -1,7 +1,7 @@
-workspace "Yakuza-VF5FS"
+workspace "YAMP"
 	platforms { "Win64" }
 
-project "Yakuza-VF5FS"
+project "YAMP"
 	kind "WindowedApp"
 	language "C++"
 
