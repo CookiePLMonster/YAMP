@@ -44,7 +44,10 @@ void YAMPSettings::LoadSettings(const std::filesystem::path& dirPath)
 		{
 			return;
 		}
+	}
 
+	{
+		const wchar_t* SECTION_NAME = L"Graphics";
 		int resX = GetPrivateProfileIntW(SECTION_NAME, L"ResolutionX", 0, iniPath.c_str());
 		int resY = GetPrivateProfileIntW(SECTION_NAME, L"ResolutionY", 0, iniPath.c_str());
 		if (resX != 0 && resY != 0)
@@ -61,6 +64,13 @@ void YAMPSettings::LoadSettings(const std::filesystem::path& dirPath)
 
 		m_fullscreen = GetPrivateProfileIntW(SECTION_NAME, L"Fullscreen", 0, iniPath.c_str()) != 0;
 	}
+
+	{
+		const wchar_t* SECTION_NAME = L"VF5FS";
+		m_arcadeMode = GetPrivateProfileIntW(SECTION_NAME, L"ArcadeMode", 0, iniPath.c_str()) != 0;
+		m_circleConfirm = GetPrivateProfileIntW(SECTION_NAME, L"CircleConfirm", 0, iniPath.c_str()) != 0;
+		m_language = GetPrivateProfileIntW(SECTION_NAME, L"Language", 1, iniPath.c_str());
+	}
 }
 
 void YAMPSettings::SaveSettings(const std::filesystem::path& dirPath)
@@ -70,12 +80,22 @@ void YAMPSettings::SaveSettings(const std::filesystem::path& dirPath)
 	{
 		const wchar_t* SECTION_NAME = L"General";
 		WritePrivateProfileIntW(SECTION_NAME, L"Version", SETTINGS_VERSION, iniPath.c_str());
+	}
 
+	{
+		const wchar_t* SECTION_NAME = L"Graphics";
 		WritePrivateProfileIntW(SECTION_NAME, L"ResolutionX", m_resX, iniPath.c_str());
 		WritePrivateProfileIntW(SECTION_NAME, L"ResolutionY", m_resY, iniPath.c_str());
 	
 		WritePrivateProfileFloatW(SECTION_NAME, L"RefreshRate", m_refreshRate, iniPath.c_str());
 
 		WritePrivateProfileIntW(SECTION_NAME, L"Fullscreen", m_fullscreen, iniPath.c_str());
+	}
+
+	{
+		const wchar_t* SECTION_NAME = L"VF5FS";
+		WritePrivateProfileIntW(SECTION_NAME, L"ArcadeMode", m_arcadeMode, iniPath.c_str());
+		WritePrivateProfileIntW(SECTION_NAME, L"CircleConfirm", m_circleConfirm, iniPath.c_str());
+		WritePrivateProfileIntW(SECTION_NAME, L"Language", m_language, iniPath.c_str());
 	}
 }

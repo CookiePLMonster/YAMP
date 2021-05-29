@@ -46,6 +46,7 @@ void YAMPUserInterface::Draw()
 	{
 		// Helper variables
 		int graphics_id;
+		int game_id;
 		int debug_id;
 		int about_id;
 
@@ -72,6 +73,7 @@ void YAMPUserInterface::Draw()
 			};
 
 			int index = 0;
+			game_id = settingsSection("Game", index++, m_pageModified);
 			graphics_id = settingsSection("Graphics", index++, m_pageModified);
 			debug_id = settingsSection("Debug", index++, m_pageModified);
 			about_id = settingsSection("About", index++, m_pageModified);
@@ -101,7 +103,8 @@ void YAMPUserInterface::Draw()
 
 		ImGui::BeginChild("##right", { 0, rightPanelHeight });
 		{
-			if (selectedTab == graphics_id) DrawGraphics();
+			if (selectedTab == game_id) DrawGame();
+			else if (selectedTab == graphics_id) DrawGraphics();
 		}
 		ImGui::EndChild();
 
@@ -170,6 +173,10 @@ void YAMPUserInterface::GetDefaultsFromSettings()
 	}
 
 	m_currentFullscreen = settings->m_fullscreen;
+
+	m_arcadeMode = settings->m_arcadeMode;
+	m_circleConfirm = settings->m_circleConfirm;
+	m_language = settings->m_language;
 }
 
 void YAMPUserInterface::DrawGraphics()
@@ -269,6 +276,64 @@ void YAMPUserInterface::DrawGraphics()
 	}
 }
 
+// TODO: This will have to be subclassed once more games are added
+void YAMPUserInterface::DrawGame()
+{
+	{
+		const char* labels[] = { "Japanese", "English" };
+		if (ImGui::BeginCombo("Language", labels[m_language]))
+		{
+			size_t index = 0;
+			for (const auto* label : labels)
+			{
+				const bool isSelected = index == m_language;
+				if (ImGui::Selectable(label, isSelected))
+				{
+					m_pageModified = true;
+					m_language = index;
+				}
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+				++index;
+			}
+
+			ImGui::EndCombo();
+		}
+	}
+
+	{
+		const char* labels[] = { "Cross (A)", "Circle (B)" };
+		if (ImGui::BeginCombo("Confirmation button", labels[m_circleConfirm]))
+		{
+			size_t index = 0;
+			for (const auto* label : labels)
+			{
+				const bool isSelected = index == m_circleConfirm;
+				if (ImGui::Selectable(label, isSelected))
+				{
+					m_pageModified = true;
+					m_circleConfirm = index != 0;
+				}
+				if (isSelected)
+					ImGui::SetItemDefaultFocus();
+				++index;
+			}
+
+			ImGui::EndCombo();
+		}
+	}
+
+	if (ImGui::Checkbox("Arcade Machine Mode", &m_arcadeMode))
+	{
+		m_pageModified = true;
+	}
+
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("When unchecked, the game runs in console mode.");
+	}
+}
+
 bool YAMPUserInterface::DrawSettingsConfirmation()
 {
 	bool result = false;
@@ -329,6 +394,10 @@ void YAMPUserInterface::ApplySettings()
 	settings->m_resY = m_resolutions[m_currentResolutionIndex].height;
 	settings->m_refreshRate = m_resolutions[m_currentResolutionIndex].refreshRates[m_currentRefRateIndex].refreshRate;
 	settings->m_fullscreen = m_currentFullscreen;
+
+	settings->m_arcadeMode = m_arcadeMode;
+	settings->m_circleConfirm = m_circleConfirm;
+	settings->m_language = m_language;
 
 	m_pageModified = false;
 	m_showRestartWarning = true;

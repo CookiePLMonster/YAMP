@@ -223,10 +223,12 @@ void Y6::VF5FS::Run(RenderWindow& window)
 	params.cri_ptr = &criware_stub;
 	params.module_main = &module_main;
 
+	const auto* settings = gGeneral.GetSettings();
+
 	params.config.is_dural_unlocked = false;
 	params.config.is_triangle_start = false;
-	params.config.game_mode = 0;
-	params.config.lang = 1;
+	params.config.game_mode = settings->m_arcadeMode ? 1 : 0;
+	params.config.lang = settings->m_language;
 	params.config.diff = 1;
 	params.config.energy = 200;
 	params.config.round = 2;

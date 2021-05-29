@@ -15,6 +15,7 @@ public:
 
 private:
 	void DrawGraphics();
+	void DrawGame();
 	bool DrawSettingsConfirmation();
 
 	bool ProcessF1Key();
@@ -39,9 +40,16 @@ private:
 	std::vector<Resolution> m_resolutions;
 
 	// Current settings
+	// Graphics
 	size_t m_currentResolutionIndex = 0;
 	size_t m_currentRefRateIndex = 0;
 	bool m_currentFullscreen = false;
+
+	// Game settings
+	// TODO: Subclass once more games are added
+	bool m_arcadeMode = false;
+	bool m_circleConfirm = false;
+	uint32_t m_language = 1;
 
 	// Volatile state
 	bool m_settingsOpen = false, m_pageModified = false, m_showRestartWarning = false;

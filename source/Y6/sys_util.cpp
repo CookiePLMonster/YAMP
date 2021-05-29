@@ -77,5 +77,5 @@ void sys_util_start_save_systemdata_task(int port, const void* buf, unsigned int
 
 bool sys_util_is_enter_circle()
 {
-	return false;
+	return gGeneral.GetSettings()->m_circleConfirm;
 }
