@@ -19,7 +19,7 @@
 
 #include "Utils/MemoryMgr.h"
 
-static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
+static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam";
 
 // Contexts
 // TODO: Move elsewhere, as they will get very, very long

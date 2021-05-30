@@ -712,7 +712,10 @@ struct context_t
 	std::byte gap[76];
 	cgs_device_context* p_device_context;
 	sbgl::cdevice sbgl_device;
-	std::byte gap2[32];
+	std::byte gap2[16];
+#ifdef _Y6_DAY1_DLL // TODO: Make this dynamic, pre-6.05 DLL has this gap bigger
+	std::byte prePatchGap[16];
+#endif
 	cgs_vb *p_vb_sphere[3];
 	cgs_vb *p_vb_capsule[3];
 	cgs_ib *p_ib_quad;
@@ -739,6 +742,9 @@ static_assert(offsetof(context_t, p_device_context) == 0xB0);
 static_assert(offsetof(context_t, sbgl_device) == 0xC0);
 static_assert(offsetof(context_t, sbgl_device.m_pD3DDeviceContext) == 0x150); // Redundant,but validates the assumption
 																			  // that m_pD3DDeviceContext
+
+// TODO: Make dynamic
+#ifdef _Y6_DAY1_DLL
 static_assert(offsetof(context_t, p_ib_quad) == 0x1370);
 static_assert(offsetof(context_t, p_ib_fan) == 0x1378);
 static_assert(offsetof(context_t, stack_cb_pool) == 0x13E0);
@@ -746,6 +752,15 @@ static_assert(offsetof(context_t, stack_up_pool) == 0x13E8);
 static_assert(offsetof(context_t, stack_shader_uniform) == 0x13F0);
 static_assert(offsetof(context_t, handle_tex) == 0x1740);
 static_assert(offsetof(context_t, handle_fx) == 0x1840);
+#else
+static_assert(offsetof(context_t, p_ib_quad) == 0x1360);
+static_assert(offsetof(context_t, p_ib_fan) == 0x1368);
+static_assert(offsetof(context_t, stack_cb_pool) == 0x13D0);
+static_assert(offsetof(context_t, stack_up_pool) == 0x13D8);
+static_assert(offsetof(context_t, stack_shader_uniform) == 0x13E0);
+static_assert(offsetof(context_t, handle_tex) == 0x1730);
+static_assert(offsetof(context_t, handle_fx) == 0x1830);
+#endif
 
 void primitive_initialize();
 
