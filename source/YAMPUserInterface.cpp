@@ -9,6 +9,8 @@
 
 #include <algorithm>
 
+static const ImVec4 WARNING_COLOUR { 1.000f, 1.000f, 0.000f, 1.000f };
+
 // "Custom" ImGui wrappers
 namespace ImGuiCustom
 {
@@ -110,12 +112,15 @@ void YAMPUserInterface::Draw()
 		{
 			if (selectedTab == game_id) DrawGame();
 			else if (selectedTab == graphics_id) DrawGraphics();
+			else if (selectedTab == debug_id) DrawDebug();
 		}
 		ImGui::EndChild();
 
 		if (m_showRestartWarning)
 		{
-			ImGui::TextColored({ 1.000f, 1.000f, 0.000f, 1.000f }, "YAMP needs to be restarted for the new settings\nto take effect.");
+			ImGui::PushTextWrapPos();
+			ImGui::TextColored(WARNING_COLOUR, "YAMP needs to be restarted for the new settings to take effect.");
+			ImGui::PopTextWrapPos();
 		}
 
 		if (drawButtons)
@@ -182,6 +187,15 @@ void YAMPUserInterface::GetDefaultsFromSettings()
 	m_arcadeMode = settings->m_arcadeMode;
 	m_circleConfirm = settings->m_circleConfirm;
 	m_language = settings->m_language;
+
+	m_dontApplyPatches = settings->m_dontApplyPatches;
+	m_useD3DDebugLayer = settings->m_useD3DDebugLayer;
+
+	// In case non-default Debug options are present, don't nag about the consequences of Debug options for this session
+	if (m_dontApplyPatches || m_useD3DDebugLayer)
+	{
+		m_debugInfoAccepted.reset();
+	}
 }
 
 void YAMPUserInterface::DrawGraphics()
@@ -339,6 +353,58 @@ void YAMPUserInterface::DrawGame()
 	}
 }
 
+void YAMPUserInterface::DrawDebug()
+{
+	if (m_debugInfoAccepted.has_value())
+	{
+		bool accept = m_debugInfoAccepted.value();
+
+		ImGui::PushTextWrapPos();
+		ImGui::TextColored(WARNING_COLOUR, "WARNING: Do not change any of these options unless you really know what you are doing. "
+			"They are intended ONLY for troubleshooting and no support is provided when any debug options are enabled. Use at your own risk.");
+		if (!accept)
+		{
+			ImGui::TextColored(WARNING_COLOUR, "Tick the checkbox below to acknowledge.");
+		}
+		else
+		{
+			ImGui::NewLine();
+		}
+		ImGui::PopTextWrapPos();
+
+		if (ImGui::Checkbox("I understand the consequences", &accept))
+		{
+			if (accept)
+			{
+				m_debugInfoAccepted = true;
+			}
+		}
+	}
+
+	if (!m_debugInfoAccepted.value_or(true))
+	{
+		return;
+	}
+
+	if (ImGui::Checkbox("Skip applying patches", &m_dontApplyPatches))
+	{
+		m_pageModified = true;
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("When checked, no patches will be applied to the game DLL.");
+	}
+
+	if (ImGui::Checkbox("Use Debug D3D device", &m_useD3DDebugLayer))
+	{
+		m_pageModified = true;
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Enables a debug D3D layer when supported by the system.");
+	}
+}
+
 bool YAMPUserInterface::DrawSettingsConfirmation()
 {
 	bool result = false;
@@ -397,7 +463,7 @@ void YAMPUserInterface::DrawDisclaimer()
 		ImGui::TextUnformatted("Welcome to Yakuza Arcade Machines Player (Build " STRINGIZE(rsc_RevisionID) ").");
 		ImGui::NewLine();
 
-		ImGui::TextColored({ 1.000f, 1.000f, 0.000f, 1.000f }, "DISCLAIMER: Yakuza Arcade Machines Player does not redistribute ANY copyrighted files.\n"
+		ImGui::TextColored(WARNING_COLOUR, "DISCLAIMER: Yakuza Arcade Machines Player does not redistribute ANY copyrighted files.\n"
 			"You must own an original Steam copy of Yakuza 6: The Song of Life to play games via YAMP.\n"
 			"Pirated game copies WILL NOT receive any support.");
 
@@ -442,6 +508,9 @@ void YAMPUserInterface::ApplySettings()
 	settings->m_arcadeMode = m_arcadeMode;
 	settings->m_circleConfirm = m_circleConfirm;
 	settings->m_language = m_language;
+
+	settings->m_dontApplyPatches = m_dontApplyPatches;
+	settings->m_useD3DDebugLayer = m_useD3DDebugLayer;
 
 	m_pageModified = false;
 	m_showRestartWarning = true;

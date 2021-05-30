@@ -81,13 +81,14 @@ RenderWindow::RenderWindow(HINSTANCE instance, HINSTANCE dllInstance, int cmdSho
 		wil::com_ptr<ID3D11Device> device;
 		wil::com_ptr<ID3D11DeviceContext> deviceContext;
 		
-#ifdef _DEBUG
-		UINT Flags = 0;//D3D11_CREATE_DEVICE_DEBUG;
-#else
-		UINT Flags = 0;
-#endif
+		UINT Flags = gGeneral.GetSettings()->m_useD3DDebugLayer ? D3D11_CREATE_DEVICE_DEBUG : 0;
 
-		HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, Flags, nullptr, 0, D3D11_SDK_VERSION, device.addressof(), nullptr, deviceContext.addressof());
+		HRESULT hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, Flags, nullptr, 0, D3D11_SDK_VERSION, device.put(), nullptr, deviceContext.put());
+		if (FAILED(hr) && (Flags & D3D11_CREATE_DEVICE_DEBUG) != 0)
+		{
+			Flags &= ~D3D11_CREATE_DEVICE_DEBUG;
+			hr = D3D11CreateDevice(nullptr, D3D_DRIVER_TYPE_HARDWARE, nullptr, Flags, nullptr, 0, D3D11_SDK_VERSION, device.put(), nullptr, deviceContext.put());
+		}
 		THROW_IF_FAILED(hr);
 
 		ImGui_ImplDX11_Init(device.get(), deviceContext.get());

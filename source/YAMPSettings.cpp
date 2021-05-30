@@ -68,6 +68,12 @@ void YAMPSettings::LoadSettings(const std::filesystem::path& dirPath)
 	}
 
 	{
+		const wchar_t* SECTION_NAME = L"Debug";
+		m_dontApplyPatches = GetPrivateProfileIntW(SECTION_NAME, L"DoNotApplyPatches", 0, iniPath.c_str()) != 0;
+		m_useD3DDebugLayer = GetPrivateProfileIntW(SECTION_NAME, L"UseDebugD3D", 0, iniPath.c_str()) != 0;
+	}
+
+	{
 		const wchar_t* SECTION_NAME = L"VF5FS";
 		m_arcadeMode = GetPrivateProfileIntW(SECTION_NAME, L"ArcadeMode", 0, iniPath.c_str()) != 0;
 		m_circleConfirm = GetPrivateProfileIntW(SECTION_NAME, L"CircleConfirm", 0, iniPath.c_str()) != 0;
@@ -93,6 +99,12 @@ void YAMPSettings::SaveSettings(const std::filesystem::path& dirPath)
 		WritePrivateProfileFloatW(SECTION_NAME, L"RefreshRate", m_refreshRate, iniPath.c_str());
 
 		WritePrivateProfileIntW(SECTION_NAME, L"Fullscreen", m_fullscreen, iniPath.c_str());
+	}
+
+	{
+		const wchar_t* SECTION_NAME = L"Debug";
+		WritePrivateProfileIntW(SECTION_NAME, L"DoNotApplyPatches", m_dontApplyPatches, iniPath.c_str());
+		WritePrivateProfileIntW(SECTION_NAME, L"UseDebugD3D", m_useD3DDebugLayer, iniPath.c_str());
 	}
 
 	{

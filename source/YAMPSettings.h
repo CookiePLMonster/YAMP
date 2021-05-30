@@ -21,6 +21,10 @@ public:
 	bool m_circleConfirm = false;
 	uint32_t m_language = 1; // English
 
+	// Debug settings
+	bool m_dontApplyPatches = false;
+	bool m_useD3DDebugLayer = false;
+
 	// Misc
 	uint32_t m_buildLastShowedDisclaimer = 0;
 };

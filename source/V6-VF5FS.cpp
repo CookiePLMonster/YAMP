@@ -134,17 +134,20 @@ static bool ResolveSymbolsAndInstallPatches(void* dll, const RenderWindow& windo
 	ImportFunctions(symbolMap);
 	PrefillVariables(symbolMap, window); // Pre-fill those variables gs/sl initialization relies on
 
-	// Install hooks re-adding logging
-	ReinstateLogging(dll, symbolMap);
-	// Install additional "assertions"
-	InjectTraps(symbolMap);
+	if (!gGeneral.GetSettings()->m_dontApplyPatches)
+	{
+		// Install hooks re-adding logging
+		ReinstateLogging(dll, symbolMap);
+		// Install additional "assertions"
+		InjectTraps(symbolMap);
 
-	// Restore saving
-	Patch_SysUtil(dll, symbolMap);
+		// Restore saving
+		Patch_SysUtil(dll, symbolMap);
 
-	// Misc patches - bugfixes, un-folding no-ops etc
-	Patch_Misc(dll, symbolMap);
-	Patch_CsGame(dll, symbolMap);
+		// Misc patches - bugfixes, un-folding no-ops etc
+		Patch_Misc(dll, symbolMap);
+		Patch_CsGame(dll, symbolMap);
+	}
 
 	PatchSl(sl::sm_context);
 	PatchGs(gs::sm_context, window);

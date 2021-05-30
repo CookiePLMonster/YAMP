@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <vector>
 #include <string>
 #include <tuple>
@@ -16,6 +17,7 @@ public:
 private:
 	void DrawGraphics();
 	void DrawGame();
+	void DrawDebug();
 	bool DrawSettingsConfirmation();
 
 	void DrawDisclaimer();
@@ -53,6 +55,11 @@ private:
 	bool m_circleConfirm = false;
 	uint32_t m_language = 1;
 
+	// Debug settings
+	bool m_dontApplyPatches = false;
+	bool m_useD3DDebugLayer = false;
+
 	// Volatile state
 	bool m_settingsOpen = false, m_pageModified = false, m_showRestartWarning = false;
+	std::optional<bool> m_debugInfoAccepted { false };
 };
