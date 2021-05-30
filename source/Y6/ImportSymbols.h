@@ -1,14 +1,6 @@
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-
-#include <vector>
-
-// "Imported" variables and functions from the DLL
-namespace Imports {
-
-enum class Symbol
+enum class ImportSymbol
 {
 	SL_CONTEXT_INSTANCE,
 	GS_CONTEXT_INSTANCE,
@@ -37,7 +29,7 @@ enum class Symbol
 	SHIFT_NEXT_MODE,
 	SHIFT_NEXT_MODE_SUB,
 
-	// Lists/patches
+	// Patches
 	SYS_UTIL_START_LOAD_SYSTEMDATA_TASK_PATCH,
 	SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH,
 	SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH,
@@ -51,7 +43,4 @@ enum class Symbol
 	DEST_CS_AUTOLOAD_PATCH,
 };
 
-void* GetImportedFunction(void* lib, Symbol symbol);
-std::vector<void*> GetImportedFunctionsList(void* lib, Symbol symbol);
-
-}
+class Imports BuildSymbolMap(void* dll);

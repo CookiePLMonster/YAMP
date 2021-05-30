@@ -8,12 +8,16 @@
 
 #include "Y6/sl.h"
 #include "Y6/gs.h"
-#include "Y6/Imports.h"
+#include "Imports.h"
 #include "Y6/Patch.h"
 #include "Y6/sys_util.h"
 #include "Y6/cs_game.h"
 
+#include "Y6/ImportSymbols.h"
+#include "Imports.h"
 #include "YAMPGeneral.h"
+
+#include "Utils/MemoryMgr.h"
 
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam_noaslr"; // Temporary, remove _noaslr later
 
@@ -78,63 +82,83 @@ static_assert(sizeof(vf5fs_execute_info_t) == 800);
 static_assert(offsetof(vf5fs_execute_info_t, assign) == 0x20);
 static_assert(offsetof(vf5fs_execute_info_t, pad) == 0x30);
 
-static void ImportFunctions(HMODULE dll)
+static void ImportFunctions(const Imports& symbols)
 {
-	using namespace Imports;
-	auto Import = [dll](auto& var, auto symbol)
+	auto Import = [&symbols](auto& var, auto symbol)
 	{
-		var = static_cast<std::decay_t<decltype(var)>>(GetImportedFunction(dll, symbol));
+		var = static_cast<std::decay_t<decltype(var)>>(symbols.GetSymbol(symbol));
 	};
 
-	Import(sl::sm_context, Symbol::SL_CONTEXT_INSTANCE);
-	Import(gs::sm_context, Symbol::GS_CONTEXT_INSTANCE);
-	Import(sl::file_create_internal, Symbol::SL_FILE_CREATE);
-	Import(sl::file_open_internal, Symbol::SL_FILE_OPEN);
-	Import(sl::file_read, Symbol::SL_FILE_READ);
-	Import(sl::file_close, Symbol::SL_FILE_CLOSE);
-	Import(sl::handle_create_internal, Symbol::SL_HANDLE_CREATE);
-	Import(sl::file_handle_destroy, Symbol::SL_FILE_HANDLE_DESTROY);
-	Import(sl::archive_lock_wlock, Symbol::ARCHIVE_LOCK_WLOCK);
-	Import(sl::archive_lock_wunlock, Symbol::ARCHIVE_LOCK_WUNLOCK);
-	Import(cgs_device_context::reset_state_all_internal, Symbol::DEVICE_CONTEXT_RESET_STATE_ALL);
-	Import(gs::vb_create, Symbol::VB_CREATE);
-	Import(gs::ib_create, Symbol::IB_CREATE);
-	Import(shift_next_mode, Symbol::SHIFT_NEXT_MODE);
-	Import(shift_next_mode_sub, Symbol::SHIFT_NEXT_MODE_SUB);
+	Import(sl::sm_context, ImportSymbol::SL_CONTEXT_INSTANCE);
+	Import(gs::sm_context, ImportSymbol::GS_CONTEXT_INSTANCE);
+	Import(sl::file_create_internal, ImportSymbol::SL_FILE_CREATE);
+	Import(sl::file_open_internal, ImportSymbol::SL_FILE_OPEN);
+	Import(sl::file_read, ImportSymbol::SL_FILE_READ);
+	Import(sl::file_close, ImportSymbol::SL_FILE_CLOSE);
+	Import(sl::handle_create_internal, ImportSymbol::SL_HANDLE_CREATE);
+	Import(sl::file_handle_destroy, ImportSymbol::SL_FILE_HANDLE_DESTROY);
+	Import(sl::archive_lock_wlock, ImportSymbol::ARCHIVE_LOCK_WLOCK);
+	Import(sl::archive_lock_wunlock, ImportSymbol::ARCHIVE_LOCK_WUNLOCK);
+	Import(cgs_device_context::reset_state_all_internal, ImportSymbol::DEVICE_CONTEXT_RESET_STATE_ALL);
+	Import(gs::vb_create, ImportSymbol::VB_CREATE);
+	Import(gs::ib_create, ImportSymbol::IB_CREATE);
+	Import(shift_next_mode, ImportSymbol::SHIFT_NEXT_MODE);
+	Import(shift_next_mode_sub, ImportSymbol::SHIFT_NEXT_MODE_SUB);
 }
 
-static void PrefillVariables(HMODULE dll, const RenderWindow& window)
+static void PrefillVariables(const Imports& symbols, const RenderWindow& window)
 {
-	using namespace Imports;
-	auto Import = [dll](auto& var, auto symbol)
+	auto Import = [&symbols](auto& var, auto symbol)
 	{
-		var = static_cast<std::decay_t<decltype(var)>>(GetImportedFunction(dll, symbol));
+		var = static_cast<std::decay_t<decltype(var)>>(symbols.GetSymbol(symbol));
 	};
 
 	gs::context_t** ppContext;
-	Import(ppContext, Symbol::GS_CONTEXT_PTR);
+	Import(ppContext, ImportSymbol::GS_CONTEXT_PTR);
 	*ppContext = gs::sm_context;
 
 	ID3D11Device** ppDevice;
-	Import(ppDevice, Symbol::D3DDEVICE);
+	Import(ppDevice, ImportSymbol::D3DDEVICE);
 	*ppDevice = window.GetD3D11Device();
 }
 
-static void InjectTraps(HMODULE dll)
+static bool ResolveSymbolsAndInstallPatches(void* dll, const RenderWindow& window) try
 {
-#ifdef _DEBUG
-	std::forward_list<void*> traps;
-	using namespace Imports;
-	auto Import = [dll](auto& var, auto symbol)
-	{
-		var = static_cast<std::decay_t<decltype(var)>>(GetImportedFunction(dll, symbol));
-	};
+	const Imports symbolMap = BuildSymbolMap(dll);
 
-	void* ptr;
-	Import(ptr, Symbol::TRAP_ALLOC_INSTANCE_TBL); traps.push_front(ptr);
+	const ScopedUnprotect::Section text(static_cast<HMODULE>(dll), ".text");
+	const ScopedUnprotect::Section rdata(static_cast<HMODULE>(dll), ".rdata");
 
-	InjectTraps(traps);
-#endif
+	// Patch up structures and do post-DllMain work here
+	// Saves having to reimplement all the complex constructors and data types
+	ImportFunctions(symbolMap);
+	PrefillVariables(symbolMap, window); // Pre-fill those variables gs/sl initialization relies on
+
+	// Install hooks re-adding logging
+	ReinstateLogging(dll, symbolMap);
+	// Install additional "assertions"
+	InjectTraps(symbolMap);
+
+	// Restore saving
+	Patch_SysUtil(dll, symbolMap);
+
+	// Misc patches - bugfixes, un-folding no-ops etc
+	Patch_Misc(dll, symbolMap);
+	Patch_CsGame(dll, symbolMap);
+
+	PatchSl(sl::sm_context);
+	PatchGs(gs::sm_context, window);
+
+	return true;
+}
+catch (...)
+{
+	// TODO: Show this in native UI
+	const std::wstring str(L"Failed to resolve imports and/or patch " + std::wstring(DLL_NAME) + L".dll!\n\nIt's either not a valid Virtua Fighter 5: Final Showdown DLL file from Yakuza 6, "
+		"or the game has been updated and YAMP is not forward compatible with that new version.");
+	MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR | MB_OK);
+
+	return false;
 }
 
 // TODO: Move elsewhere
@@ -162,7 +186,7 @@ HMODULE Y6::VF5FS::LoadDLL()
 	if (!gameDll)
 	{
 		const std::wstring str(L"Could not load " + std::wstring(DLL_NAME) + L".dll!\n\nMake sure that YAMP.exe is located in your Yakuza 6: The Song of Life directory or its \"vf5fs\" subdirectory, next to the DLL file.");
-		MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR|MB_OK);
+		MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR | MB_OK);
 	}
 
 	return gameDll.get();
@@ -206,25 +230,11 @@ void Y6::VF5FS::Run(RenderWindow& window)
 
 	CheckForExecutable();
 
-	// Patch up structures and do post-DllMain work here
-	// Saves having to reimplement all the complex constructors and data types
-	ImportFunctions(gameDll.get());
-	PrefillVariables(gameDll.get(), window); // Pre-fill those variables gs/sl initialization relies on
-
-	// Install hooks re-adding logging
-	ReinstateLogging(gameDll.get());
-	// Install additional "assertions"
-	InjectTraps(gameDll.get());
-
-	// Restore saving
-	Patch_SysUtil(gameDll.get());
-
-	// Misc patches - bugfixes, un-folding no-ops etc
-	Patch_Misc(gameDll.get());
-	Patch_CsGame(gameDll.get());
-
-	PatchSl(sl::sm_context);
-	PatchGs(gs::sm_context, window);
+	if (!ResolveSymbolsAndInstallPatches(gameDll.get(), window))
+	{
+		// Init failed
+		return;
+	}
 
 	// Initialize Criware stub and module stubs
 	CriStub criware_stub;
@@ -235,7 +245,7 @@ void Y6::VF5FS::Run(RenderWindow& window)
 		sl::context_t* context;
 	} sl_module;
 	sl_module.context = sl::sm_context;
-	
+
 	struct gs_module_t
 	{
 		size_t size = sizeof(decltype(*this)); // Should be 80 when complete, but other fields are unknown so far
@@ -259,7 +269,7 @@ void Y6::VF5FS::Run(RenderWindow& window)
 		const icri* cri_ptr;
 		const char* root_path;
 		module_func_t* module_main;
-		vf5fs_game_config_t config {};
+		vf5fs_game_config_t config{};
 	} params;
 	static_assert(sizeof(params) == 64);
 
@@ -297,7 +307,7 @@ void Y6::VF5FS::Run(RenderWindow& window)
 
 bool Y6::VF5FS::GameLoop(module_func_t func, RenderWindow& window)
 {
-	vf5fs_execute_info_t execute_info {};
+	vf5fs_execute_info_t execute_info{};
 	execute_info.size_of_struct = sizeof(execute_info);
 	execute_info.p_device_context = gs::sm_context->p_device_context;
 

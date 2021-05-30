@@ -8,9 +8,11 @@
 #include "../Utils/MemoryMgr.h"
 #include "../Utils/Trampoline.h"
 
-#include "Imports.h"
 #include "sys_util.h"
 #include "cs_game.h"
+
+#include "ImportSymbols.h"
+#include "../Imports.h"
 
 void PatchSl(sl::context_t* context)
 {
@@ -41,7 +43,7 @@ void PatchSl(sl::context_t* context)
 	context->file_handle_pool.reserve(NUM_FILE_HANDLES);
 
 	// TODO: Validate this
-	sl::file_handle_internal_t* handles = new sl::file_handle_internal_t[NUM_FILE_HANDLES] {};
+	sl::file_handle_internal_t* handles = new sl::file_handle_internal_t[NUM_FILE_HANDLES]{};
 
 	for (auto& handle : wil::make_range(handles, NUM_FILE_HANDLES))
 	{
@@ -82,7 +84,7 @@ void PatchGs(gs::context_t* context, const RenderWindow& window)
 
 		context->stack_shader_uniform.push(uniform);
 	}
-	
+
 	device_context->initialize(reinterpret_cast<sbgl::ccontext*>(context->sbgl_device.m_pD3DDeviceContext));
 	context->p_device_context = device_context;
 
@@ -127,68 +129,69 @@ static void prj_trap(const char* format, ...)
 #endif
 }
 
-void ReinstateLogging(void* dll)
+void ReinstateLogging(void* dll, const Imports& symbols)
 {
 	Trampoline* t = Trampoline::MakeTrampoline(dll);
+	for (const auto& [key, func] : symbols.GetSymbolRange(ImportSymbol::PRJ_TRAP))
 	{
-		void* func = Imports::GetImportedFunction(dll, Imports::Symbol::PRJ_TRAP);
-		Memory::VP::InjectHook(func, t->Jump(&prj_trap), PATCH_JUMP);
+		Memory::InjectHook(func, t->Jump(&prj_trap), PATCH_JUMP);
 	}
 }
 
-void InjectTraps(const std::forward_list<void*>& addresses)
+void InjectTraps(const Imports& symbols)
 {
-	for (void* ptr : addresses)
+#ifdef _DEBUG
+	for (const auto& [key, ptr] : symbols.GetSymbolRange(ImportSymbol::TRAP_ALLOC_INSTANCE_TBL))
 	{
-		Memory::VP::Patch<uint8_t>(ptr, 0xCC);
+		Memory::Patch<uint8_t>(ptr, 0xCC);
 	}
+#endif
 }
 
-void Patch_SysUtil(void* dll)
+void Patch_SysUtil(void* dll, const Imports& symbols)
 {
-	// TODO: Unprotect before patching and lose the ::VP namespace
 	Trampoline* hop = Trampoline::MakeTrampoline(dll);
 	{
 		void* sys_util_enable_storage = hop->Jump(&sys_util_check_enable_storage);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::SYS_UTIL_CHECK_ENABLE_STORAGE_PATCH))
 		{
-			Memory::VP::InjectHook(addr, sys_util_enable_storage);
+			Memory::InjectHook(addr, sys_util_enable_storage);
 		}
 	}
 
 	{
 		void* sys_util_load_systemdata_task = hop->Jump(&sys_util_start_load_systemdata_task);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_START_LOAD_SYSTEMDATA_TASK_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::SYS_UTIL_START_LOAD_SYSTEMDATA_TASK_PATCH))
 		{
-			Memory::VP::InjectHook(addr, sys_util_load_systemdata_task);
+			Memory::InjectHook(addr, sys_util_load_systemdata_task);
 		}
 	}
 
 	{
 		void* sys_util_save_systemdata_task = hop->Jump(&sys_util_start_save_systemdata_task);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::SYS_UTIL_START_SAVE_SYSTEMDATA_TASK_PATCH))
 		{
-			Memory::VP::InjectHook(addr, sys_util_save_systemdata_task);
+			Memory::InjectHook(addr, sys_util_save_systemdata_task);
 		}
 	}
 
 	{
 		void* sys_util_circle_enter = hop->Jump(&sys_util_is_enter_circle);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::SYS_UTIL_IS_ENTER_CIRCLE_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::SYS_UTIL_IS_ENTER_CIRCLE_PATCH))
 		{
-			Memory::VP::InjectHook(addr, sys_util_circle_enter);
+			Memory::InjectHook(addr, sys_util_circle_enter);
 		}
 	}
 }
 
-void Patch_CsGame(void* dll)
+void Patch_CsGame(void* dll, const Imports& symbols)
 {
 	Trampoline* hop = Trampoline::MakeTrampoline(dll);
 	{
 		void* dest_autoload = hop->Jump(&dest_cs_autoload);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::DEST_CS_AUTOLOAD_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::DEST_CS_AUTOLOAD_PATCH))
 		{
-			Memory::VP::Patch(addr, dest_autoload);
+			Memory::Patch(addr, dest_autoload);
 		}
 	}
 }
@@ -208,16 +211,15 @@ static void* VF5AppCtor_arguments(void* obj, int /*argc*/, char** /*argv*/)
 	return orgVF5AppCtor(obj, __argc, __argv);
 }
 
-void Patch_Misc(void* dll)
+void Patch_Misc(void* dll, const Imports& symbols)
 {
-	// TODO: Unprotect before patching and lose the ::VP namespace
 	Trampoline* hop = Trampoline::MakeTrampoline(dll);
 	// prj::shared_ptr_internal::assign_helper_enable_shared_from_this folds with prj_trap, causing a false-positive log and eventually crashing
 	{
 		void* assign_helper = hop->Jump(&assign_helper_enable_shared_from_this);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::ASSIGN_HELPER_ENABLE_SHARED_FROM_THIS_PATCH))
 		{
-			Memory::VP::InjectHook(addr, assign_helper);
+			Memory::InjectHook(addr, assign_helper);
 		}
 	}
 
@@ -225,44 +227,43 @@ void Patch_Misc(void* dll)
 	// In Y6 this code uses frame time, in YLAD it just uses count-- - a possible failed attempt at making the code support high framerates?
 	{
 		void* get_frame_speed_stub = hop->Jump(&get_frame_speed_pause_stub);
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::TASK_PAUSE_CTRL_COUNTDOWN_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::TASK_PAUSE_CTRL_COUNTDOWN_PATCH))
 		{
-			Memory::VP::InjectHook(addr, get_frame_speed_stub);
+			Memory::InjectHook(addr, get_frame_speed_stub);
 		}
 	}
 
 	// Pass commandline arguments from the launcher
 	{
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::VF5_APP_CTOR_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::VF5_APP_CTOR_PATCH))
 		{
-			Memory::VP::ReadCall(addr, orgVF5AppCtor);
-			Memory::VP::InjectHook(addr, hop->Jump(VF5AppCtor_arguments));;
-		}	
+			Memory::ReadCall(addr, orgVF5AppCtor);
+			Memory::InjectHook(addr, hop->Jump(VF5AppCtor_arguments));;
+		}
 	}
 
 	// Reinstate "Press START button"
 	{
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::PRESS_START_POS_Y_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::PRESS_START_POS_Y_PATCH))
 		{
-			Memory::VP::Patch<float>(addr, 320.0f);
+			Memory::Patch<float>(addr, 320.0f);
 		}
 
 		float& posX = hop->Reference<float>();
 		posX = 250.0f;
 
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::PRESS_START_POS_X_PTR_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::PRESS_START_POS_X_PTR_PATCH))
 		{
-			Memory::VP::WriteOffsetValue(addr, &posX);
+			Memory::WriteOffsetValue(addr, &posX);
 		}
 	}
 
 
 	// Reinstate button mappings
-	// TODO: Only console mode?
 	{
-		for (void* addr : Imports::GetImportedFunctionsList(dll, Imports::Symbol::CS_SWITCH_MAPPING_OVERRIDE_PATCH))
+		for (const auto& [key, addr] : symbols.GetSymbolRange(ImportSymbol::CS_SWITCH_MAPPING_OVERRIDE_PATCH))
 		{
-			Memory::VP::Nop(addr, 9);
+			Memory::Nop(addr, 9);
 		}
 	}
 }

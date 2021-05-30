@@ -6,7 +6,7 @@ project "YAMP"
 	language "C++"
 
 	include "source/VersionInfo.lua"
-	files { "**/MemoryMgr.h", "**/Trampoline.h" }
+	files { "**/MemoryMgr.h", "**/Trampoline.h", "**/Patterns.*" }
 
 
 workspace "*"
