@@ -194,7 +194,7 @@ wil::com_ptr<IDXGISwapChain> RenderWindow::CreateSwapChainForWindow(ID3D11Device
 	swapChainDesc.SampleDesc.Count = 1;                             
 	swapChainDesc.SampleDesc.Quality = 0;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-	swapChainDesc.BufferCount = 1;
+	swapChainDesc.BufferCount = 2;
 	swapChainDesc.OutputWindow = window;
 	swapChainDesc.Windowed = TRUE;
 
@@ -210,7 +210,17 @@ wil::com_ptr<IDXGISwapChain> RenderWindow::CreateSwapChainForWindow(ID3D11Device
 	hr = adapter->GetParent(IID_PPV_ARGS(factory.addressof()));
 	THROW_IF_FAILED(hr);
 
-	hr = factory->CreateSwapChain(device, &swapChainDesc, swapChain.addressof());
+
+	// Try flip models, if it fails (because of an old Windows version), try a normal blit model
+	for (auto swapEffect : {DXGI_SWAP_EFFECT_FLIP_DISCARD, DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL, DXGI_SWAP_EFFECT_DISCARD})
+	{
+		swapChainDesc.SwapEffect = swapEffect;
+		hr = factory->CreateSwapChain(device, &swapChainDesc, swapChain.put());
+		if (SUCCEEDED(hr))
+		{
+			break;
+		}
+	}
 	THROW_IF_FAILED(hr);
 
 	return swapChain;
