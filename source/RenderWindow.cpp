@@ -184,7 +184,6 @@ void RenderWindow::NewImGuiFrame()
 
 void RenderWindow::RenderImGui()
 {
-	ImGui::ShowDemoWindow();
 	m_ui.Draw();
 
 	ImGui::Render();
