@@ -244,7 +244,9 @@ public:
 	D3D_FEATURE_LEVEL m_FeatureLevelSupported;
 	unsigned int m_mwa_flags;
 	unsigned int m_max_frame_latency;
+#ifdef _Y6_DAY1_DLL // Removed in a patch
 	timestamp_st m_timestamp;
+#endif
 	ID3D11Query *m_pD3DQuery;
 	//__m128 m_fast_clear_color; // YLAD only
 	__m128 m_p_border_color[256];
@@ -252,8 +254,15 @@ public:
 };
 static_assert(offsetof(cdevice_native, m_pD3DDeviceContext) == 0x90);
 static_assert(offsetof(cdevice_native, m_context_desc) == 0x98);
+static_assert(offsetof(cdevice_native, m_mwa_flags) == 0xF4);
+static_assert(offsetof(cdevice_native, m_max_frame_latency) == 0xF8);
+#ifdef _Y6_DAY1_DLL // TODO: Make this dynamic - this struct changed in a patch
 static_assert(offsetof(cdevice_native, m_pD3DQuery) == 0x118);
 static_assert(offsetof(cdevice_native, m_p_border_color) == 0x120);
+#else
+static_assert(offsetof(cdevice_native, m_pD3DQuery) == 0x100);
+static_assert(offsetof(cdevice_native, m_p_border_color) == 0x110);
+#endif
 
 class cdevice : public cdevice_native
 {
@@ -712,10 +721,7 @@ struct context_t
 	std::byte gap[76];
 	cgs_device_context* p_device_context;
 	sbgl::cdevice sbgl_device;
-	std::byte gap2[16];
-#ifdef _Y6_DAY1_DLL // TODO: Make this dynamic, pre-6.05 DLL has this gap bigger
-	std::byte prePatchGap[16];
-#endif
+	std::byte gap2[32];
 	cgs_vb *p_vb_sphere[3];
 	cgs_vb *p_vb_capsule[3];
 	cgs_ib *p_ib_quad;
