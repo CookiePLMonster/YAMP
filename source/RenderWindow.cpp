@@ -28,6 +28,15 @@ static LRESULT WINAPI WindowProc(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lPar
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
+	case WM_KEYDOWN:
+	case WM_SYSKEYDOWN:
+		gGeneral.SetKeyPressed(wParam, true);
+		break;
+	case WM_KEYUP:
+	case WM_SYSKEYUP:
+		gGeneral.SetKeyPressed(wParam, false);
+		break;
+
 	default:
 		break;
 	}

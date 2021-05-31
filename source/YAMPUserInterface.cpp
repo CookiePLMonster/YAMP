@@ -52,10 +52,7 @@ void YAMPUserInterface::Draw()
 	if (ImGui::Begin("YAMP Settings", &m_settingsOpen, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove))
 	{
 		// Helper variables
-		int graphics_id;
-		int game_id;
-		int debug_id;
-		int about_id;
+		int graphics_id, game_id, debug_id, about_id, controls_id;
 
 		static int selectedTab = 0;
 		static int delayedSelectedTab = 0; // For confirmation
@@ -82,6 +79,7 @@ void YAMPUserInterface::Draw()
 			int index = 0;
 			game_id = settingsSection("Game", index++, m_pageModified);
 			graphics_id = settingsSection("Graphics", index++, m_pageModified);
+			controls_id = settingsSection("Controls", index++, m_pageModified);
 			debug_id = settingsSection("Debug", index++, m_pageModified);
 			about_id = settingsSection("About", index++, m_pageModified);
 
@@ -96,35 +94,36 @@ void YAMPUserInterface::Draw()
 		ImGui::SameLine();
 
 		ImGui::BeginGroup();
-		bool drawButtons = true;
+		bool drawButtons = selectedTab != about_id && selectedTab != controls_id;
 
 		float rightPanelHeight = 0.0f;
 		if (drawButtons)
 		{
 			rightPanelHeight -= ImGui::GetFrameHeightWithSpacing();
-		}
-		if (m_showRestartWarning)
-		{
-			rightPanelHeight -= ImGui::GetTextLineHeightWithSpacing() + ImGui::GetTextLineHeight();
+			if (m_showRestartWarning)
+			{
+				rightPanelHeight -= ImGui::GetTextLineHeightWithSpacing() + ImGui::GetTextLineHeight();
+			}
 		}
 
 		ImGui::BeginChild("##right", { 0, rightPanelHeight });
 		{
 			if (selectedTab == game_id) DrawGame();
 			else if (selectedTab == graphics_id) DrawGraphics();
+			else if (selectedTab == controls_id) DrawControls();
 			else if (selectedTab == debug_id) DrawDebug();
 		}
 		ImGui::EndChild();
 
-		if (m_showRestartWarning)
-		{
-			ImGui::PushTextWrapPos();
-			ImGui::TextColored(WARNING_COLOUR, "YAMP needs to be restarted for the new settings to take effect.");
-			ImGui::PopTextWrapPos();
-		}
-
 		if (drawButtons)
 		{
+			if (m_showRestartWarning)
+			{
+				ImGui::PushTextWrapPos();
+				ImGui::TextColored(WARNING_COLOUR, "YAMP needs to be restarted for the new settings to take effect.");
+				ImGui::PopTextWrapPos();
+			}
+
 			if (ImGuiCustom::ButtonToggleable("Apply", m_pageModified))
 			{
 				ApplySettings();
@@ -353,6 +352,31 @@ void YAMPUserInterface::DrawGame()
 	}
 }
 
+void YAMPUserInterface::DrawControls()
+{
+	ImGui::PushItemWidth(ImGui::CalcItemWidth() / 2.0f);
+
+	// TODO: Make these controls customizable
+	ImGui::LabelText("Movement", "Arrow Keys / WSAD");
+	ImGui::LabelText("P", "I");
+	ImGui::LabelText("K", "K");
+	ImGui::LabelText("G", "Space");
+	ImGui::LabelText("P + G", "L");
+	ImGui::LabelText("P + K + G", "O");
+	ImGui::LabelText("P + K", "U");
+	ImGui::LabelText("K + G", ";");
+	ImGui::NewLine();
+	ImGui::LabelText("Confirm", "Enter");
+	ImGui::LabelText("Back", "Escape");
+	ImGui::LabelText("Start Game, Select Subcostume, Skip", "F");
+	ImGui::LabelText("View Controls, Reset", "Tab");
+
+	ImGui::NewLine();
+	ImGui::LabelText("Open YAMP Settings", "F1");
+
+	ImGui::PopItemWidth();
+}
+
 void YAMPUserInterface::DrawDebug()
 {
 	if (m_debugInfoAccepted.has_value())
@@ -461,7 +485,7 @@ void YAMPUserInterface::DrawDisclaimer()
 #define STRINGIZE2(s) #s
 
 		ImGui::TextUnformatted("Welcome to Yakuza Arcade Machines Player (Build " STRINGIZE(rsc_RevisionID) ").");
-		ImGui::NewLine();
+		ImGui::Separator();
 
 		ImGui::TextColored(WARNING_COLOUR, "DISCLAIMER: Yakuza Arcade Machines Player does not redistribute ANY copyrighted files.\n"
 			"You must own an original Steam copy of Yakuza 6: The Song of Life to play games via YAMP.\n"
@@ -469,6 +493,8 @@ void YAMPUserInterface::DrawDisclaimer()
 
 		ImGui::NewLine();
 		ImGui::TextUnformatted("All rights to Virtua Fighter 5: Final Showdown belong to SEGA.");
+		ImGui::Separator();
+		ImGui::TextUnformatted("Press "); ImGui::SameLine(0, 0); ImGui::TextColored(WARNING_COLOUR, "F1"); ImGui::SameLine(0, 0); ImGui::TextUnformatted(" to open settings.");
 
 #undef STRINGIZE
 #undef STRINGIZE2

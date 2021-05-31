@@ -17,6 +17,7 @@ public:
 private:
 	void DrawGraphics();
 	void DrawGame();
+	void DrawControls();
 	void DrawDebug();
 	bool DrawSettingsConfirmation();
 

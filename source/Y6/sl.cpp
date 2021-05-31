@@ -1,6 +1,7 @@
 #include "sl.h"
 
 #include "file_access.h"
+#include "../YAMPGeneral.h"
 
 #include <Xinput.h>
 
@@ -475,12 +476,93 @@ namespace
 
         return true;
     }
+
+    void _set_state_keyboard(unsigned int *m_now, float *m_x1, float *m_y1, uint8_t* m_buttons)
+    {
+        auto setButton = [&m_now, &m_buttons] (sl::BUTTON button) {
+            *m_now |= (1 << button);
+            m_buttons[button] = 0xFF;
+        };
+
+        // TODO: Un-hardcode, for now these correspond to default Yakuza 6 controls
+        const auto& keys = gGeneral.GetPressedKeys();
+        const bool circleIsConfirm = gGeneral.GetSettings()->m_circleConfirm;
+        if (keys[VK_RETURN])
+        {
+            setButton(circleIsConfirm ? sl::BUTTON_B : sl::BUTTON_A);
+        }
+        if (keys[VK_ESCAPE])
+        {
+            setButton(circleIsConfirm ? sl::BUTTON_A : sl::BUTTON_B);
+        }
+
+        if (keys['I'])
+        {
+            setButton(sl::BUTTON_A);
+        }
+        if (keys['K'])
+        {
+            setButton(sl::BUTTON_B);
+        }
+        if (keys[VK_SPACE])
+        {
+            setButton(sl::BUTTON_X);
+        }
+        
+        if (keys['L'])
+        {
+            setButton(sl::BUTTON_LB);
+        }
+        if (keys['U'])
+        {
+            setButton(sl::BUTTON_RB);
+        }
+        if (keys['O'])
+        {
+            setButton(sl::BUTTON_LT);
+        }
+        if (keys[VK_OEM_1])
+        {
+            setButton(sl::BUTTON_RT);
+        }
+
+        if (keys['F'])
+        {
+            setButton(sl::BUTTON_START);
+        }
+        if (keys[VK_TAB])
+        {
+            setButton(sl::BUTTON_BACK);
+        }
+
+        if (keys[VK_LEFT] || keys['A'])
+        {
+            *m_x1 = -1.0f;
+        }
+        else if (keys[VK_RIGHT] || keys['D'])
+        {
+            *m_x1 = 1.0f;
+        }
+        if (keys[VK_UP] || keys['W'])
+        {
+            *m_y1 = -1.0f;
+        }
+        else if (keys[VK_DOWN] || keys['S'])
+        {
+            *m_y1 = 1.0f;
+        }
+    }
 };
 
 void csl_pad::set_state(unsigned int index)
 {
     m_prev = std::exchange(m_now, 0);
+    m_x1 = m_y1 = 0.0f;
     _set_state_xi(index, &m_now, &m_x1, &m_y1, m_buttons);
+    if (index == 0)
+    {
+        _set_state_keyboard(&m_now, &m_x1, &m_y1, m_buttons);
+    }
 
     m_push = ~m_prev & m_now;
     m_pull = m_prev & ~m_now;
