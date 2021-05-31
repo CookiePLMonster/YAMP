@@ -188,7 +188,7 @@ HMODULE Y6::VF5FS::LoadDLL()
 
 	if (!gameDll)
 	{
-		const std::wstring str(L"Could not load " + std::wstring(DLL_NAME) + L".dll!\n\nMake sure that YAMP.exe is located in your Yakuza 6: The Song of Life directory or its \"vf5fs\" subdirectory, next to the DLL file.");
+		const std::wstring str(L"Could not load " + std::wstring(DLL_NAME) + L"!\n\nMake sure that YAMP.exe is located in your Yakuza 6: The Song of Life directory or its \"vf5fs\" subdirectory, next to the DLL file.");
 		MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR | MB_OK);
 	}
 	else
@@ -198,7 +198,16 @@ HMODULE Y6::VF5FS::LoadDLL()
 		// Get the checksum
 		PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(gameDll.get());
 		PIMAGE_NT_HEADERS ntHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<char*>(dosHeader) + dosHeader->e_lfanew);
-		gGeneral.SetDLLTimestamp(ntHeader->FileHeader.TimeDateStamp);
+		const DWORD timeStamp = ntHeader->FileHeader.TimeDateStamp;
+		gGeneral.SetDLLTimestamp(timeStamp);
+
+		// Reject known old DLLs
+		if (timeStamp == 0x603E22E3 || timeStamp == 0x606D6969 || timeStamp == 0x6075A65A)
+		{
+			const std::wstring str(std::wstring(DLL_NAME) + L" is of an unsupported version!\n\nPlease update your Yakuza 6: The Song of Life to the latest version.");
+			MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR | MB_OK);
+			gameDll.reset();
+		}
 	}
 
 	return gameDll.get();
