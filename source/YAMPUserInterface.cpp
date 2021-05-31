@@ -33,6 +33,12 @@ namespace ImGuiCustom
 
 }
 
+#define STRINGIZE(s) STRINGIZE2(s)
+#define STRINGIZE2(s) #s
+
+#define WIDEN(x) WIDEN2(x)
+#define WIDEN2(x) L ##x
+
 void YAMPUserInterface::Draw()
 {
 	if (gGeneral.GetSettings()->m_buildLastShowedDisclaimer < rsc_RevisionID)
@@ -112,6 +118,7 @@ void YAMPUserInterface::Draw()
 			else if (selectedTab == graphics_id) DrawGraphics();
 			else if (selectedTab == controls_id) DrawControls();
 			else if (selectedTab == debug_id) DrawDebug();
+			else if (selectedTab == about_id) DrawAbout();
 		}
 		ImGui::EndChild();
 
@@ -429,6 +436,57 @@ void YAMPUserInterface::DrawDebug()
 	}
 }
 
+void YAMPUserInterface::DrawAbout()
+{
+	ImGui::PushTextWrapPos();
+
+	// YAMP info
+	ImGui::TextUnformatted("Yakuza Arcade Machines Player");
+	ImGui::TextUnformatted("Build " STRINGIZE(rsc_RevisionID));
+	ImGui::TextUnformatted("Compiled on " __DATE__ " " __TIME__);
+	if (ImGui::Button("Check for updates"))
+	{
+		ShellExecuteW(nullptr, L"open", WIDEN(rsc_UpdateURL), nullptr, nullptr, SW_SHOWNORMAL);
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("A GitHub page will open in the web browser.");
+	}
+
+	// Game info
+	ImGui::Separator();
+	ImGui::TextUnformatted("GAME INFORMATION:");
+
+	// TODO: For now it's hardcoded, but it will have to be un-hardcoded later
+	ImGui::TextUnformatted("Current arcade: Virtua Fighter 5: Final Showdown");
+	ImGui::TextUnformatted("Base game: Yakuza 6");
+	ImGui::Text("DLL name: %s", gGeneral.GetDLLName().c_str());
+	{
+		const time_t timestamp = gGeneral.GetDLLTimestamp();
+		tm time;
+		if (gmtime_s(&time, &timestamp) == 0)
+		{
+			char timeStr[64];
+			if (strftime(timeStr, std::size(timeStr), "%b %e %Y %T", &time) != 0)
+			{
+				ImGui::Text("DLL compiled on %s", timeStr);
+			}
+		}
+	}
+
+	// Disclaimers
+	ImGui::Separator();
+	ImGui::TextUnformatted("ACKNOWLEDGEMENTS:");
+	ImGui::TextColored(WARNING_COLOUR, "Yakuza Arcade Machines Player does not redistribute ANY copyrighted files. "
+			"You must own an original Steam copy of Yakuza 6: The Song of Life to play games via YAMP. "
+			"Pirated game copies WILL NOT receive any support.");
+
+	ImGui::NewLine();
+	ImGui::TextUnformatted("All rights to Virtua Fighter 5: Final Showdown belong to SEGA.");
+
+	ImGui::PopTextWrapPos();
+}
+
 bool YAMPUserInterface::DrawSettingsConfirmation()
 {
 	bool result = false;
@@ -481,9 +539,6 @@ void YAMPUserInterface::DrawDisclaimer()
 
 	if (ImGui::Begin("##disclaimer", nullptr, windowFlags))
 	{
-#define STRINGIZE(s) STRINGIZE2(s)
-#define STRINGIZE2(s) #s
-
 		ImGui::TextUnformatted("Welcome to Yakuza Arcade Machines Player (Build " STRINGIZE(rsc_RevisionID) ").");
 		ImGui::Separator();
 
@@ -495,9 +550,6 @@ void YAMPUserInterface::DrawDisclaimer()
 		ImGui::TextUnformatted("All rights to Virtua Fighter 5: Final Showdown belong to SEGA.");
 		ImGui::Separator();
 		ImGui::TextUnformatted("Press "); ImGui::SameLine(0, 0); ImGui::TextColored(WARNING_COLOUR, "F1"); ImGui::SameLine(0, 0); ImGui::TextUnformatted(" to open settings.");
-
-#undef STRINGIZE
-#undef STRINGIZE2
 	}
 	ImGui::End();
 }

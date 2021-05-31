@@ -1,34 +1,7 @@
 #include "file_access.h"
 
 #include <string_view>
-
-static std::wstring UTF8ToWchar(std::string_view text)
-{
-	std::wstring result;
-
-	const int count = MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0);
-	if ( count != 0 )
-	{
-		result.resize(count);
-		MultiByteToWideChar(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), count);
-	}
-
-	return result;
-}
-
-static std::string WcharToUTF8(std::wstring_view text)
-{
-	std::string result;
-
-	const int count = WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
-	if ( count != 0 )
-	{
-		result.resize(count);
-		WideCharToMultiByte(CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), count, nullptr, nullptr);
-	}
-
-	return result;
-}
+#include "../YAMPGeneral.h"
 
 bool csl_file_access::open(const char* path, sl::handle_t handle)
 {

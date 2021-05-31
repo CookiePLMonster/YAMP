@@ -19,6 +19,7 @@ private:
 	void DrawGame();
 	void DrawControls();
 	void DrawDebug();
+	void DrawAbout();
 	bool DrawSettingsConfirmation();
 
 	void DrawDisclaimer();

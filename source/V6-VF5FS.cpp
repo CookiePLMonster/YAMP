@@ -19,7 +19,7 @@
 
 #include "Utils/MemoryMgr.h"
 
-static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam";
+static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam.dll";
 
 // Contexts
 // TODO: Move elsewhere, as they will get very, very long
@@ -190,6 +190,15 @@ HMODULE Y6::VF5FS::LoadDLL()
 	{
 		const std::wstring str(L"Could not load " + std::wstring(DLL_NAME) + L".dll!\n\nMake sure that YAMP.exe is located in your Yakuza 6: The Song of Life directory or its \"vf5fs\" subdirectory, next to the DLL file.");
 		MessageBoxW(nullptr, str.c_str(), L"Yakuza Arcade Machines Player", MB_ICONERROR | MB_OK);
+	}
+	else
+	{
+		gGeneral.SetDLLName(WcharToUTF8(DLL_NAME));
+
+		// Get the checksum
+		PIMAGE_DOS_HEADER dosHeader = reinterpret_cast<PIMAGE_DOS_HEADER>(gameDll.get());
+		PIMAGE_NT_HEADERS ntHeader = reinterpret_cast<PIMAGE_NT_HEADERS>(reinterpret_cast<char*>(dosHeader) + dosHeader->e_lfanew);
+		gGeneral.SetDLLTimestamp(ntHeader->FileHeader.TimeDateStamp);
 	}
 
 	return gameDll.get();
