@@ -39,7 +39,7 @@ Imports BuildSymbolMap(void* dll)
 		{ S::SL_FILE_CREATE, get_module_pattern(dll, "48 8B 05 ? ? ? ? 48 8B F9", -0x13) },
 		{ S::SL_FILE_OPEN, get_module_pattern(dll, "48 8B 05 ? ? ? ? 48 8B D9 45 33 F6", -0x12) },
 		{ S::SL_FILE_READ, get_module_pattern(dll, "4C 8B 0D ? ? ? ? 8B C1", -0x6) },
-		{ S::SL_FILE_CLOSE, immediate(get_module_pattern(dll, "E8 ? ? ? ? 48 C7 44 3B ? ? ? ? ?", 1)) },
+		{ S::SL_FILE_CLOSE, immediate(get_module_pattern(dll, "E8 ? ? ? ? 48 C7 44 3B", 1)) },
 		{ S::SL_HANDLE_CREATE, get_module_pattern(dll, "48 8B 3D ? ? ? ? 48 8B F1 45 33 FF", -0x18) },
 		{ S::SL_FILE_HANDLE_DESTROY, get_module_pattern(dll, "48 89 5C 24 ? 48 81 C1", -0x11) },
 		{ S::PRJ_TRAP, immediate(get_module_pattern(dll, "E8 ? ? ? ? 8B 43 0C 4C 3B E0", 1)) },
