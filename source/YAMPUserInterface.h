@@ -50,6 +50,7 @@ private:
 	size_t m_currentResolutionIndex = 0;
 	size_t m_currentRefRateIndex = 0;
 	bool m_currentFullscreen = false;
+	bool m_enableFpsCap = true;
 
 	// Game settings
 	// TODO: Subclass once more games are added

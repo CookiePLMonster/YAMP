@@ -314,12 +314,40 @@ void Y6::VF5FS::Run(RenderWindow& window)
 	params.config.round = 2;
 	params.config.time = 60;
 
+	// Set up a FPS limiter
+	// TODO: Do more gracefully
+	int64_t frameTimeTicks;
+	{
+		// We want to enforce 60 FPS, unless the cap is disabled in Debug
+		if (!settings->m_enableFpsCap)
+		{
+			frameTimeTicks = 0;
+		}
+		else
+		{
+			LARGE_INTEGER frequency;
+			QueryPerformanceFrequency(&frequency);
+			frameTimeTicks = (frequency.QuadPart * 50) / 3;
+		}
+	}
+
 	// Kick off the game
 	if (module_start(sizeof(params), &params) == 0)
 	{
+		LARGE_INTEGER lastTime;
+		QueryPerformanceCounter(&lastTime);
 		while (!window.IsShuttingDown())
 		{
 			if (!GameLoop(module_main, window)) break;
+
+			// TODO: Waitable timer
+			LARGE_INTEGER currentTime;
+			do
+			{
+				QueryPerformanceCounter(&currentTime);
+			}
+			while (((currentTime.QuadPart - lastTime.QuadPart) * 1000) < frameTimeTicks);
+			lastTime = currentTime;
 		}
 
 		// TODO: module_stop

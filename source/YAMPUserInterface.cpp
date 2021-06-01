@@ -189,6 +189,7 @@ void YAMPUserInterface::GetDefaultsFromSettings()
 	}
 
 	m_currentFullscreen = settings->m_fullscreen;
+	m_enableFpsCap = settings->m_enableFpsCap;
 
 	m_arcadeMode = settings->m_arcadeMode;
 	m_circleConfirm = settings->m_circleConfirm;
@@ -294,10 +295,19 @@ void YAMPUserInterface::DrawGraphics()
 		ImGui::SameLine(0, spacing);
 		ImGui::Text("Refresh Rate");
 
-		if (ImGui::Checkbox("Fullscreen", &m_currentFullscreen))
-		{
-			m_pageModified = true;
-		}
+	}
+
+	if (ImGui::Checkbox("Fullscreen", &m_currentFullscreen))
+	{
+		m_pageModified = true;
+	}
+	if (ImGui::Checkbox("Enable 60 FPS cap", &m_enableFpsCap))
+	{
+		m_pageModified = true;
+	}
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Gameplay bugs may occur on uncapped framerates.");
 	}
 }
 
@@ -582,6 +592,7 @@ void YAMPUserInterface::ApplySettings()
 	settings->m_resY = m_resolutions[m_currentResolutionIndex].height;
 	settings->m_refreshRate = m_resolutions[m_currentResolutionIndex].refreshRates[m_currentRefRateIndex].refreshRate;
 	settings->m_fullscreen = m_currentFullscreen;
+	settings->m_enableFpsCap = m_enableFpsCap;
 
 	settings->m_arcadeMode = m_arcadeMode;
 	settings->m_circleConfirm = m_circleConfirm;

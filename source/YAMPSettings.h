@@ -14,6 +14,7 @@ public:
 	uint32_t m_resY = 720;
 	float m_refreshRate = 60.0f;
 	bool m_fullscreen = false;
+	bool m_enableFpsCap = true;
 
 	// Game
 	// TODO: Subclass once more games are added
