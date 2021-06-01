@@ -375,13 +375,13 @@ void YAMPUserInterface::DrawControls()
 
 	// TODO: Make these controls customizable
 	ImGui::LabelText("Movement", "Arrow Keys / WSAD");
-	ImGui::LabelText("P", "I");
-	ImGui::LabelText("K", "K");
-	ImGui::LabelText("G", "Space");
-	ImGui::LabelText("P + G", "L");
-	ImGui::LabelText("P + K + G", "O");
+	ImGui::LabelText("P", "K");
+	ImGui::LabelText("K", "L");
+	ImGui::LabelText("G", "J");
+	ImGui::LabelText("P + G", "M");
+	ImGui::LabelText("P + K + G", "I");
 	ImGui::LabelText("P + K", "U");
-	ImGui::LabelText("K + G", ";");
+	ImGui::LabelText("K + G", "O");
 	ImGui::NewLine();
 	ImGui::LabelText("Confirm", "Enter");
 	ImGui::LabelText("Back", "Escape");

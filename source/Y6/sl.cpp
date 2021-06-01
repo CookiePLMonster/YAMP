@@ -496,24 +496,24 @@ namespace
             setButton(circleIsConfirm ? sl::BUTTON_A : sl::BUTTON_B);
         }
 
-        if (keys['I'])
+        if (keys['K'])
         {
             setButton(sl::BUTTON_A);
         }
-        if (keys['K'])
+        if (keys['L'])
         {
             setButton(sl::BUTTON_B);
         }
-        if (keys[VK_SPACE])
+        if (keys['J'])
         {
             setButton(sl::BUTTON_X);
         }
         
-        if (keys['L'])
+        if (keys['M'])
         {
             setButton(sl::BUTTON_LB);
         }
-        if (keys['U'])
+        if (keys['I'])
         {
             setButton(sl::BUTTON_RB);
         }
@@ -521,7 +521,7 @@ namespace
         {
             setButton(sl::BUTTON_LT);
         }
-        if (keys[VK_OEM_1])
+        if (keys['O'])
         {
             setButton(sl::BUTTON_RT);
         }
