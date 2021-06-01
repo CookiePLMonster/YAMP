@@ -1,5 +1,5 @@
 defines { 
-    "rsc_FullName=\"Yakuza Arcade Machine Player\"",
+    "rsc_FullName=\"Yakuza Arcade Machines Player\"",
     "rsc_MinorVersion=0",
     "rsc_RevisionID=1",
     "rsc_BuildID=0",
