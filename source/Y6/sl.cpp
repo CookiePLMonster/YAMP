@@ -513,11 +513,11 @@ namespace
         {
             setButton(sl::BUTTON_LB);
         }
-        if (keys['I'])
+        if (keys['U'])
         {
             setButton(sl::BUTTON_RB);
         }
-        if (keys['O'])
+        if (keys['I'])
         {
             setButton(sl::BUTTON_LT);
         }
