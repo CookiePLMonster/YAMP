@@ -452,7 +452,11 @@ void YAMPUserInterface::DrawAbout()
 
 	// YAMP info
 	ImGui::TextUnformatted("Yakuza Arcade Machines Player");
+#if rsc_BuildID > 0
+	ImGui::TextUnformatted("Build " STRINGIZE(rsc_RevisionID) " (Rev " STRINGIZE(rsc_BuildID) ")");
+#else
 	ImGui::TextUnformatted("Build " STRINGIZE(rsc_RevisionID));
+#endif
 	ImGui::TextUnformatted("Compiled on " __DATE__ " " __TIME__);
 	if (ImGui::Button("Check for updates"))
 	{
