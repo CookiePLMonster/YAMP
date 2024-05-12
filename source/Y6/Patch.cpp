@@ -134,7 +134,7 @@ void ReinstateLogging(void* dll, const Imports& symbols)
 	Trampoline* t = Trampoline::MakeTrampoline(dll);
 	for (const auto& [key, func] : symbols.GetSymbolRange(ImportSymbol::PRJ_TRAP))
 	{
-		Memory::InjectHook(func, t->Jump(&prj_trap), PATCH_JUMP);
+		Memory::InjectHook(func, t->Jump(&prj_trap), Memory::HookType::Jump);
 	}
 }
 

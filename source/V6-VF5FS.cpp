@@ -18,6 +18,7 @@
 #include "YAMPGeneral.h"
 
 #include "Utils/MemoryMgr.h"
+#include "Utils/ScopedUnprotect.hpp"
 
 static const wchar_t* DLL_NAME = L"vf5fs-pxd-w64-Retail Steam.dll";
 
